@@ -61,7 +61,14 @@ class SQLiteRepository(AbstractRepository[T]):
             cur.execute(query)
         con.close()
 
+    def is_pk_in_db(self, cur: Any, pk: int) -> bool:
+        query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
+        res = cur.execute(query).fetchone()
+        return not (res is None)
+
     def add(self, obj: T) -> int:
+        if getattr(obj, 'pk', None) != 0:
+            raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
         qmarks = ', '.join("?" * len(self.fields))
         values = [getattr(obj, x) for x in self.fields]
@@ -76,6 +83,7 @@ class SQLiteRepository(AbstractRepository[T]):
                 # TODO cov
                 raise ValueError("No assignable pk")
             obj.pk = int(cur.lastrowid)
+            print(obj.pk)
 
         con.close()
         return obj.pk
@@ -110,6 +118,8 @@ class SQLiteRepository(AbstractRepository[T]):
         upd_stm = ', '.join(setter)
 
         with sqlite3.connect(self.db_file) as con:
+            if not self.is_pk_in_db(con.cursor(), obj.pk):
+                raise ValueError(f'No object with id={obj.pk} in DB.')
             query = f'UPDATE {self.table_name} SET {upd_stm} WHERE id = {obj.pk}'
             con.cursor().execute(query)
         con.close()
@@ -117,6 +127,8 @@ class SQLiteRepository(AbstractRepository[T]):
     def delete(self, pk: int) -> None:
         """ Удалить запись """
         with sqlite3.connect(self.db_file) as con:
+            if not self.is_pk_in_db(con.cursor(), pk):
+                raise KeyError(f'No object with id={pk} in DB.')
             query = f'DELETE FROM {self.table_name} WHERE id = {pk}'
             con.cursor().execute(query)
         con.close()
