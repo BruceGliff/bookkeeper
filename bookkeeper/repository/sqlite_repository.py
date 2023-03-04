@@ -10,13 +10,10 @@ from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 def gettype(attr: Any) -> str:
     # TODO make it more beautiful
-    """Returns type in string format for dedicated attr.
+    """_summary_
 
     Args:
-        attr (_type_): _description_
-
-    Raises:
-        ValueError: _description_
+        attr (Any): _description_
 
     Returns:
         str: _description_
@@ -24,6 +21,21 @@ def gettype(attr: Any) -> str:
     if isinstance(attr, int):
         return 'INTEGER'
     return 'TEXT'
+
+
+def adddecor(value: str | int) -> str | int:
+    # TODO make it more beautiful
+    """_summary_
+
+    Args:
+        attr (Any): _description_
+
+    Returns:
+        str | int: _description_
+    """
+    if isinstance(value, str):
+        return f'\'{value}\''
+    return value
 
 
 class SQLiteRepository(AbstractRepository[T]):
@@ -93,6 +105,14 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
+        values = [adddecor(getattr(obj, x)) for x in self.fields]
+        setter = [f'{col} = {val}' for col, val in zip(self.fields, values)]
+        upd_stm = ', '.join(setter)
+
+        with sqlite3.connect(self.db_file) as con:
+            query = f'UPDATE {self.table_name} SET {upd_stm} WHERE id = {obj.pk}'
+            con.cursor().execute(query)
+        con.close()
 
     def delete(self, pk: int) -> None:
         """ Удалить запись """

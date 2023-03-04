@@ -33,8 +33,8 @@ def test_crud(repo, custom_class):
     assert repo.get(pk) == obj
     obj2 = custom_class()
     obj2.pk = pk
-    return
     repo.update(obj2)
     assert repo.get(pk) == obj2
+    return
     repo.delete(pk)
     assert repo.get(pk) is None
