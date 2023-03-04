@@ -62,11 +62,32 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
 
     def is_pk_in_db(self, cur: Any, pk: int) -> bool:
+        """Forms query to DB to check is records with pk exists.
+
+        Args:
+            cur (Any): cursor for query
+            pk (int): private key to check
+
+        Returns:
+            bool: True if record exists, overwise False
+        """
         query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
         res = cur.execute(query).fetchone()
         return res is not None
 
     def add(self, obj: T) -> int:
+        """Creates record about new object in DB.
+
+        Args:
+            obj (T): Object to create record about.
+
+        Raises:
+            ValueError: Trying to add  object without pk.
+            ValueError: Error while DB processing
+
+        Returns:
+            int: private key of inserted record.
+        """
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
@@ -88,6 +109,14 @@ class SQLiteRepository(AbstractRepository[T]):
         return obj.pk
 
     def fill_object(self, result: Any) -> T:
+        """Fills attributes of object in accordance with results
+
+        Args:
+            result (Any): result of DB query.
+
+        Returns:
+            T: Filled object.
+        """
         obj: T = self.cls_ty()
         obj.pk = result[0]
         for x, res in zip(self.fields, result[1:]):
@@ -151,6 +180,8 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
 
     def delete_all(self) -> None:
+        """Deletes all records in DB.
+        """
         with sqlite3.connect(self.db_file) as con:
             query = f'DELETE FROM {self.table_name}'
             con.cursor().execute(query)
