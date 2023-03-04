@@ -121,10 +121,8 @@ class SQLiteRepository(AbstractRepository[T]):
                 condition += f' {key} = {adddecor(val)} AND'
             query += condition.rsplit(' ', 1)[0]
 
-        print(query)
         with sqlite3.connect(self.db_file) as con:
             results = con.cursor().execute(query).fetchall()
-            print(results)
             objs = [self.fill_object(result) for result in results]
 
         con.close()
