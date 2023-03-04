@@ -64,7 +64,7 @@ class SQLiteRepository(AbstractRepository[T]):
     def is_pk_in_db(self, cur: Any, pk: int) -> bool:
         query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
         res = cur.execute(query).fetchone()
-        return not (res is None)
+        return res is not None
 
     def add(self, obj: T) -> int:
         if getattr(obj, 'pk', None) != 0:
@@ -83,10 +83,16 @@ class SQLiteRepository(AbstractRepository[T]):
                 # TODO cov
                 raise ValueError("No assignable pk")
             obj.pk = int(cur.lastrowid)
-            print(obj.pk)
 
         con.close()
         return obj.pk
+
+    def fill_object(self, result: Any) -> T:
+        obj: T = self.cls_ty()
+        obj.pk = result[0]
+        for x, res in zip(self.fields, result[1:]):
+            setattr(obj, x, res)
+        return obj
 
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
@@ -96,10 +102,7 @@ class SQLiteRepository(AbstractRepository[T]):
             result = con.cursor().execute(query).fetchone()
             if result is None:
                 return None
-            obj: T = self.cls_ty()
-            obj.pk = result[0]
-            for x, res in zip(self.fields, result[1:]):
-                setattr(obj, x, res)
+            obj: T = self.fill_object(result)
         con.close()
         return obj
 
@@ -107,9 +110,25 @@ class SQLiteRepository(AbstractRepository[T]):
         """
         Получить все записи по некоторому условию
         where - условие в виде словаря {'название_поля': значение}
-        если условие не задано (по умолчанию), вернуть все записи
+        если условие не задано (по умолчанию пусто), вернуть все записи
         """
-        return []
+        query = f'SELECT * FROM {self.table_name}'
+
+        condition = ''
+        if where is not None:
+            condition = ' WHERE'
+            for key, val in where.items():
+                condition += f' {key} = {adddecor(val)} AND'
+            query += condition.rsplit(' ', 1)[0]
+
+        print(query)
+        with sqlite3.connect(self.db_file) as con:
+            results = con.cursor().execute(query).fetchall()
+            print(results)
+            objs = [self.fill_object(result) for result in results]
+
+        con.close()
+        return objs
 
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
@@ -130,5 +149,11 @@ class SQLiteRepository(AbstractRepository[T]):
             if not self.is_pk_in_db(con.cursor(), pk):
                 raise KeyError(f'No object with id={pk} in DB.')
             query = f'DELETE FROM {self.table_name} WHERE id = {pk}'
+            con.cursor().execute(query)
+        con.close()
+
+    def delete_all(self) -> None:
+        with sqlite3.connect(self.db_file) as con:
+            query = f'DELETE FROM {self.table_name}'
             con.cursor().execute(query)
         con.close()

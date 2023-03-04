@@ -10,13 +10,14 @@ def custom_class():
         name: str = "TEST"
         value: int = 42
 
+        def __str__(self) -> str:
+            return f'pk={self.pk} name={self.name} value={self.value}'
+
         def __eq__(self, other) -> bool:
             if not isinstance(other, Custom):
                 return NotImplemented
-            for x, y in zip(vars(self).items(), vars(other).items()):
-                if x != y:
-                    return False
-            return True
+
+            return self.pk == other.pk and self.name == other.name and self.value == other.value
 
     return Custom
 
@@ -61,7 +62,7 @@ def test_cannot_add_without_pk(repo):
 
 def test_cannot_delete_unexistent(repo):
     with pytest.raises(KeyError):
-        repo.delete(1)
+        repo.delete(-1)
 
 
 def test_cannot_update_without_pk(repo, custom_class):
@@ -69,8 +70,9 @@ def test_cannot_update_without_pk(repo, custom_class):
     with pytest.raises(ValueError):
         repo.update(obj)
 
-"""
+
 def test_get_all(repo, custom_class):
+    repo.delete_all()
     objects = [custom_class() for i in range(5)]
     for o in objects:
         repo.add(o)
@@ -78,14 +80,14 @@ def test_get_all(repo, custom_class):
 
 
 def test_get_all_with_condition(repo, custom_class):
+    repo.delete_all()
     objects = []
     for i in range(5):
         o = custom_class()
-        o.name = str(i)
-        o.test = 'test'
+        o.name = 'test'
+        o.value = i
         repo.add(o)
         objects.append(o)
-    assert repo.get_all({'name': '0'}) == [objects[0]]
-    assert repo.get_all({'test': 'test'}) == objects
 
-"""
+    assert repo.get_all({'value': 0}) == [objects[0]]
+    assert repo.get_all({'name': 'test'}) == objects
