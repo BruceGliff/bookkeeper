@@ -86,7 +86,7 @@ class SQLiteRepository(AbstractRepository[T]):
             query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
             # TODO is it possible to fetch more than one?
             result = con.cursor().execute(query).fetchone()
-            if len(result) == 0:
+            if result is None:
                 return None
             obj: T = self.cls_ty()
             obj.pk = result[0]
@@ -116,3 +116,7 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def delete(self, pk: int) -> None:
         """ Удалить запись """
+        with sqlite3.connect(self.db_file) as con:
+            query = f'DELETE FROM {self.table_name} WHERE id = {pk}'
+            con.cursor().execute(query)
+        con.close()
