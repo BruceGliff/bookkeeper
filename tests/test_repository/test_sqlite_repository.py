@@ -10,6 +10,14 @@ def custom_class():
         name: str = "TEST"
         value: int = 42
 
+        def __eq__(self, other) -> bool:
+            if not isinstance(other, Custom):
+                return NotImplemented
+            for x, y in zip(vars(self).items(), vars(other).items()):
+                if x != y:
+                    return False
+            return True
+
     return Custom
 
 
@@ -22,10 +30,10 @@ def test_crud(repo, custom_class):
     obj = custom_class()
     pk = repo.add(obj)
     assert obj.pk == pk
-    return
     assert repo.get(pk) == obj
     obj2 = custom_class()
     obj2.pk = pk
+    return
     repo.update(obj2)
     assert repo.get(pk) == obj2
     repo.delete(pk)

@@ -38,6 +38,7 @@ class SQLiteRepository(AbstractRepository[T]):
         self.table_name = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
         self.fields.pop('pk')
+        self.cls_ty = cls
 
         with sqlite3.connect(self.db_file) as con:
             values = [(f'{x}', gettype(getattr(cls, x))) for x in self.fields]
@@ -69,6 +70,18 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
+        with sqlite3.connect(self.db_file) as con:
+            query = f'SELECT * FROM {self.table_name} WHERE id = {pk}'
+            # TODO is it possible to fetch more than one?
+            result = con.cursor().execute(query).fetchone()
+            if len(result) == 0:
+                return None
+            obj: T = self.cls_ty()
+            obj.pk = result[0]
+            for x, res in zip(self.fields, result[1:]):
+                setattr(obj, x, res)
+        con.close()
+        return obj
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
         """
