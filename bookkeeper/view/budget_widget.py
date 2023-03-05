@@ -3,7 +3,7 @@ Widget of budget table
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import (QWidget, QTableWidget, QLabel)
+from PySide6.QtWidgets import (QWidget, QTableWidget)
 
 
 def set_data(table: QTableWidget, spent: list[float], day_budget: float):
