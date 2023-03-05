@@ -6,7 +6,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QWidget, QTableWidget)
 
 
-def set_data(table: QTableWidget, spent: list[float], day_budget: float):
+def set_data(table: QTableWidget, spent: list[float], day_budget: float) -> None:
     budget = [day_budget, day_budget * 7, day_budget * 30]
     for i, [lost, limit] in enumerate(zip(spent, budget)):
         table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(lost)))
@@ -14,7 +14,7 @@ def set_data(table: QTableWidget, spent: list[float], day_budget: float):
 
 
 class BudgetWidget(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         layout = QtWidgets.QVBoxLayout()

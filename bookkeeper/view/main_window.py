@@ -10,7 +10,7 @@ from .budget_widget import BudgetWidget
 from .edit_widget import EditWidget
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Bookkeeper")
 

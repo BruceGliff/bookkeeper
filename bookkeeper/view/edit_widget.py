@@ -5,14 +5,16 @@ Widget of editing pane
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QWidget, QComboBox)
 
+from .edit_ctg_window import EditCtgWindow
 
-def set_data(box: QComboBox, cats: list[str]):
+
+def set_data(box: QComboBox, cats: list[str]) -> None:
     for cat in cats:
         box.addItem(cat)
 
 
 class EditWidget(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         layout = QtWidgets.QVBoxLayout()
@@ -37,5 +39,14 @@ class EditWidget(QWidget):
         gwidget.setLayout(glayout)
         layout.addWidget(gwidget)
 
-        set_data(cats_box, ["Продукты", "Книги"])
+        self.cat_list = ["Продукты", "Книги"]
+        set_data(cats_box, self.cat_list)
+        
+        cat_edit_button.clicked.connect(self.open_window)
+
         self.setLayout(layout)
+    
+    def open_window(self):
+        self.edit_ctg = EditCtgWindow(self.cat_list)
+        self.edit_ctg.show()
+

@@ -6,14 +6,14 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QWidget, QTableWidget)
 
 
-def set_data(table: QTableWidget, data: list[list[str]]):
+def set_data(table: QTableWidget, data: list[list[str]]) -> None:
     for i, row in enumerate(data):
         for j, x in enumerate(row):
             table.setItem(i, j, QtWidgets.QTableWidgetItem(x.capitalize()))
 
 
 class ExpenceWidget(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         layout = QtWidgets.QVBoxLayout()
