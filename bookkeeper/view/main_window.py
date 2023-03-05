@@ -6,6 +6,7 @@ from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QWidget)
 
 from .expence_widget import ExpenceWidget
+from .budget_widget import BudgetWidget
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -14,7 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         layout = QtWidgets.QVBoxLayout()
         expence = ExpenceWidget()
-        budget = QtWidgets.QLabel("PLACEHOLDER FOR BUDGET")
+        budget = BudgetWidget()
         edit_field = QtWidgets.QLabel("PLACEHOLDER FOR EDITING")
 
         layout.addWidget(expence)
