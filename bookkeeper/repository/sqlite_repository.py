@@ -162,7 +162,7 @@ class SQLiteRepository(AbstractRepository[T]):
         values = [getattr(obj, x) for x in self.fields]
         setter = [f'{col} = ?' for col in self.fields]
         upd_stm = ', '.join(setter)
-        
+
         value_tuple = tuple(values)
         with sqlite3.connect(self.db_file) as con:
             if not self.is_pk_in_db(con.cursor(), obj.pk):
