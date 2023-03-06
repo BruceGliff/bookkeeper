@@ -8,8 +8,8 @@ class AbstractView(Protocol):
     def set_ctg_list(notused: list[Category]) -> None:
         pass
 
-    #def register_ctg_modifier(handler: Callable[[Category], None]):
-    #    pass
+    def register_ctg_modifier(handler):
+        pass
 
 
 class CategoryPresenter:
@@ -19,15 +19,15 @@ class CategoryPresenter:
 
         self.ctgs = self.ctg_repo.get_all()
         self.view.set_ctg_list(self.ctgs)
-    #    self.view.register_ctg_modifier(self.modify_ctg)
+        self.view.register_ctg_modifier(self.modify_ctg)
 
     def modify_ctg(self, ctg: Category) -> None:
         self.ctg_repo.update(ctg)
-        self.view.set_ctg_list(self.ctgs)
+        #self.view.set_ctg_list(self.ctgs)
 
     def add_ctg(self, name, parent):
         if name in [c.name for c in self.ctgs]:
-            raise ValidationError(f'Category {name} already present.')
+            raise ValueError(f'Category {name} already present.')
         
         ctg = Category(name, parent)
         self.ctg_repo.add(ctg)

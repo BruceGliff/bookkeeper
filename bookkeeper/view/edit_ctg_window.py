@@ -22,7 +22,7 @@ def handler_error(widget, handler):
     def inner(*args, **kwargs):
         try:
             handler(*args, **kwargs)
-        except ValidationError as ex:
+        except ValueError as ex:
             QMessageBox.critical(self, 'Ошибка', str(ex))
     return inner
 
@@ -31,6 +31,9 @@ class CategoryItem(QTreeWidgetItem):
     def __init__(self, parent, ctg: Category):
         super().__init__(parent, [ctg.name])
         self.ctg = ctg
+    
+    def update(self, name: str):
+        self.ctg.name = name
     
     # TODO this does not work if ctg.name is changed.
     def __str__(self):
@@ -60,8 +63,11 @@ class EditCtgWindow(QWidget):
 
         self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
 
-    def register_ctg_adder(self, handler):
-        self.ctg_adder = handler_error(self, handler)
+    #def register_ctg_adder(self, handler):
+    #    self.ctg_adder = handler_error(self, handler)
+
+    def register_ctg_modifier(self, handler):
+        self.ctg_modifier = handler_error(self, handler)
 
     def add_ctg(self):
         name = "c"
@@ -88,8 +94,9 @@ class EditCtgWindow(QWidget):
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
 
-    def edit_ctg_event(self, ctg: Category, column: int):
-        ctg.name = ctg.text(column)
+    def edit_ctg_event(self, ctg_item: CategoryItem, column: int):
+        ctg_item.update(ctg_item.text(column))
+        self.ctg_modifier(ctg_item.ctg)
 
     def add_ctg_event(self):
         ctg = self.ctgs_widget.currentItem()
