@@ -10,15 +10,6 @@ from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.category import Category
 
 
-def handler_error(widget, handler):
-    def inner(*args, **kwargs):
-        try:
-            handler(*args, **kwargs)
-        except ValueError as ex:
-            QMessageBox.critical(self, 'Ошибка', str(ex))
-    return inner
-
-
 class CategoryItem(QTreeWidgetItem):
     def __init__(self, parent, ctg: Category):
         super().__init__(parent, [ctg.name])
@@ -57,13 +48,16 @@ class EditCtgWindow(QWidget):
         self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
 
     def register_ctg_adder(self, handler):
-        self.ctg_adder = handler_error(self, handler)
+        self.ctg_adder = handler
 
     def register_ctg_modifier(self, handler):
-        self.ctg_modifier = handler_error(self, handler)
+        self.ctg_modifier = handler
 
     def register_ctg_checker(self, handler):
-        self.ctg_checker = handler_error(self, handler)
+        self.ctg_checker = handler
+
+    def register_ctg_deleter(self, handler):
+        self.ctg_deleter = handler
 
     def set_ctg_list(self, ctgs: list[Category]) -> None:
         table = self.ctgs_widget
@@ -84,17 +78,31 @@ class EditCtgWindow(QWidget):
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
 
-    def edit_ctg_event(self, ctg_item: CategoryItem, column: int):
-        if not self.ctg_checker(ctg_item.ctg):
-            ctg_item.setText(ctg_item.ctg.name)
-            pass
+    def delete_ctg(self, ctg_item: CategoryItem, column: int):
+        parent = ctg_item.parent()
+        parent.removeChild(ctg_item)
 
-        if ctg_item.ctg.pk != 0:
-            ctg_item.update(ctg_item.text(column))
-            self.ctg_modifier(ctg_item.ctg)
+    def rename_ctg(self, ctg_item: CategoryItem, column: int):
+        ctg_item.setText(column, ctg_item.ctg.name)
+
+    def edit_ctg_event(self, ctg_item: CategoryItem, column: int):
+        entered_text = ctg_item.text(column)
+
+        if ctg_item.ctg.pk == 0:
+            action = self.ctg_adder
+            revert = self.delete_ctg
         else:
-            ctg_item.update(ctg_item.text(column))
-            self.ctg_adder(ctg_item.ctg)
+            action = self.ctg_modifier
+            revert = self.rename_ctg
+
+        if not self.ctg_checker(entered_text):
+            QMessageBox.critical(self, 'Ошибка', f'Category {entered_text} already exists')
+            self.ctgs_widget.itemChanged.disconnect()
+            revert(ctg_item, column)
+            self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
+        else:
+            ctg_item.update(entered_text)
+            action(ctg_item.ctg)
 
     def add_ctg_event(self):
         ctg_items = self.ctgs_widget.selectedItems()
@@ -113,8 +121,8 @@ class EditCtgWindow(QWidget):
         self.ctgs_widget.edit(self.ctgs_widget.currentIndex())
 
     def delete_ctg_event(self):
-        ctg = self.ctgs_widget.currentItem()
-        print(f'Deleting {ctg}')
+        ctg_item = self.ctgs_widget.currentItem()
+        print(f'Deleting {ctg_item.ctg}')
 
     def dummy(self): pass
 

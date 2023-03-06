@@ -32,8 +32,8 @@ class CategoryPresenter:
     def modify_ctg(self, ctg: Category) -> None:
         self.ctg_repo.update(ctg)
 
-    def check_name(self, ctg: Category) -> bool:
-        if ctg.name in [c.name for c in self.ctgs]:
+    def check_name(self, name: str) -> bool:
+        if name in [c.name for c in self.ctgs]:
             return False
         return True
 
