@@ -11,6 +11,12 @@ class AbstractView(Protocol):
     def register_ctg_modifier(handler):
         pass
 
+    def register_ctg_adder(handler):
+        pass
+
+    def register_ctg_checker(handler):
+        pass
+
 
 class CategoryPresenter:
     def __init__(self,  view: AbstractView, repository_factory):
@@ -20,16 +26,17 @@ class CategoryPresenter:
         self.ctgs = self.ctg_repo.get_all()
         self.view.set_ctg_list(self.ctgs)
         self.view.register_ctg_modifier(self.modify_ctg)
+        self.view.register_ctg_adder(self.add_ctg)
+        self.view.register_ctg_checker(self.check_name)
 
     def modify_ctg(self, ctg: Category) -> None:
         self.ctg_repo.update(ctg)
-        #self.view.set_ctg_list(self.ctgs)
 
-    def add_ctg(self, name, parent):
-        if name in [c.name for c in self.ctgs]:
-            raise ValueError(f'Category {name} already present.')
-        
-        ctg = Category(name, parent)
+    def check_name(self, ctg: Category) -> bool:
+        if ctg.name in [c.name for c in self.ctgs]:
+            return False
+        return True
+
+    def add_ctg(self, ctg: Category) -> None:
         self.ctg_repo.add(ctg)
         self.ctgs.append(ctg)
-        self.view.set_ctg_list(self.ctgs)
