@@ -111,7 +111,6 @@ class BudgetWidget(QWidget):
         self.update_expenses(expenses)
         self.update_budget(bgt)
 
-
     def edit_bgt_event(self, bgt_item: QTableWidgetItem):
         value = bgt_item.get_value()
         if value is None:

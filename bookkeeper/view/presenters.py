@@ -2,6 +2,7 @@
 from typing import Protocol
 
 from bookkeeper.models.category import Category
+from bookkeeper.models.budget import Budget
 
 
 class AbstractView(Protocol):
@@ -57,3 +58,10 @@ class CategoryPresenter:
         for x in to_delete:
             self.ctgs.remove(x)
             self.ctg_repo.delete(x.pk)
+
+
+class BudgetPresenter:
+    def __init__(self,  view: AbstractView, repository_factory):
+        self.view = view
+        self.repo = repository_factory.get(Budget)
+
