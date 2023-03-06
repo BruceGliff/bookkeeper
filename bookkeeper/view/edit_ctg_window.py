@@ -2,8 +2,8 @@
 Widget of editing categories
 """
 
-from PySide6 import QtWidgets
-from PySide6.QtWidgets import (QWidget, QTreeWidgetItem)
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import (QWidget, QTreeWidgetItem, QMenu)
 
 from .presenters import CategoryPresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
@@ -31,7 +31,8 @@ class CategoryItem(QTreeWidgetItem):
     def __init__(self, parent, ctg: Category):
         super().__init__(parent, [ctg.name])
         self.ctg = ctg
-
+    
+    # TODO this does not work if ctg.name is changed.
     def __str__(self):
         return self.ctg.name
 
@@ -52,6 +53,12 @@ class EditCtgWindow(QWidget):
         layout.addWidget(self.ctgs_widget)
         self.setLayout(layout)
         self.presenter = CategoryPresenter(self, RepositoryFactory())
+
+        self.menu = QMenu(self)
+        self.menu.addAction('Добавить').triggered.connect(self.add_ctg_event)
+        self.menu.addAction('Удалить').triggered.connect(self.delete_ctg_event)
+
+        self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
 
     def register_ctg_adder(self, handler):
         self.ctg_adder = handler_error(self, handler)
@@ -75,6 +82,21 @@ class EditCtgWindow(QWidget):
                 parent_ctg = uniq_pk.get(int(parent))
 
             ctg_item = CategoryItem(parent_ctg, x)
+            ctg_item.setFlags(ctg_item.flags() | QtCore.Qt.ItemIsEditable)
             uniq_pk.update({pk: ctg_item})
-        
+
+    def contextMenuEvent(self, event):
+        self.menu.exec_(event.globalPos())
+
+    def edit_ctg_event(self, ctg: Category, column: int):
+        ctg.name = ctg.text(column)
+
+    def add_ctg_event(self):
+        ctg = self.ctgs_widget.currentItem()
+        print(f'Adding {ctg}')
+
+    def delete_ctg_event(self):
+        ctg = self.ctgs_widget.currentItem()
+        print(f'Deleting {ctg}')
+
 
