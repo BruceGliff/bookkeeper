@@ -78,9 +78,9 @@ class EditCtgWindow(QWidget):
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
 
-    def delete_ctg(self, ctg_item: CategoryItem, column: int):
-        parent = ctg_item.parent()
-        parent.removeChild(ctg_item)
+    def delete_ctg(self, ctg_item: CategoryItem, *_):
+        root = self.ctgs_widget.invisibleRootItem()
+        (ctg_item.parent() or root).removeChild(ctg_item)
 
     def rename_ctg(self, ctg_item: CategoryItem, column: int):
         ctg_item.setText(column, ctg_item.ctg.name)
@@ -122,8 +122,12 @@ class EditCtgWindow(QWidget):
 
     def delete_ctg_event(self):
         ctg_item = self.ctgs_widget.currentItem()
-        print(f'Deleting {ctg_item.ctg}')
-
-    def dummy(self): pass
-
+        confirm = QMessageBox.warning(self, 'Внимание',
+                                      f'Вы уверены, что хотите удалить текущую "'
+                                      f'{ctg_item.ctg.name}" и все дочерние категории?',
+                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if confirm == QMessageBox.No:
+            return
+        self.delete_ctg(ctg_item)
+        self.ctg_deleter(ctg_item.ctg)
 

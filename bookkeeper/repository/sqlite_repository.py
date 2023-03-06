@@ -18,7 +18,7 @@ def gettype(attr: Any) -> str:
     Returns:
         str: _description_
     """
-    if isinstance(attr, int):
+    if isinstance(attr, int | None):
         return 'INTEGER'
     return 'TEXT'
 
