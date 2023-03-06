@@ -16,11 +16,11 @@ def set_data(table: QTreeWidget, data: list[str]) -> None:
 class EditCtgWindow(QWidget):
     def __init__(self, ctgs: list[str]) -> None:
         super().__init__()
-        
+
         self.setWindowTitle("Изменение категорий")
 
         layout = QtWidgets.QVBoxLayout()
-        
+
         ctgs_widget = QtWidgets.QTreeWidget()
         ctgs_widget.setColumnCount(1)
         ctgs_widget.setHeaderLabel('Категории')

@@ -45,5 +45,5 @@ while True:
         print(exp)
 
 # TODO as we create categories every launch, I delete them.
-cat_repo.delete_all()
-exp_repo.delete_all()
+#cat_repo.delete_all()
+#exp_repo.delete_all()
