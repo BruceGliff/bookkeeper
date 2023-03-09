@@ -9,6 +9,7 @@ from datetime import datetime
 from .presenters import ExpensePresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.expense import Expense
+from .edit_ctg_window import EditCtgWindow
 
 
 class TableRow():
@@ -51,8 +52,9 @@ class TableAmountItem(TableItem):
 
 
 class TableCategoryItem(TableItem):
-    def __init__(self, row: TableRow, retriever):
-        self.retriever = retriever
+    def __init__(self, row: TableRow, exp_view):
+        self.ctg_view = exp_view.ctg_view
+        self.retriever = exp_view.ctg_retriever
         super().__init__(row)
 
     def validate(self) -> bool:
@@ -62,7 +64,11 @@ class TableCategoryItem(TableItem):
     def restore(self):
         ctg = self.retriever(self.row.exp.category)
         if ctg is None:
-            print('none')
+            ctg_item = self.ctg_view.get_selected_ctg()
+            if ctg_item is None:
+                print('First select category!')
+                return
+            ctg = ctg_item.ctg.name
         self.setText(ctg)
     
     def update(self):
@@ -121,7 +127,7 @@ class Table(QTableWidget):
         row = TableRow(exp)
         self.setItem(rc, 0, TableDateItem(row))
         self.setItem(rc, 1, TableAmountItem(row))
-        self.setItem(rc, 2, TableCategoryItem(row, self.parent.ctg_retriever))
+        self.setItem(rc, 2, TableCategoryItem(row, self.parent))
         self.setItem(rc, 3, TableItem(row))
         self.itemChanged.connect(self.update_exp_event)
         return self.item(rc, 1)
@@ -139,7 +145,7 @@ class Table(QTableWidget):
         self.parent.exp_deleter(row)
 
     def add_exp_event(self):
-        exp = Expense(category=5) #TODO getCategory
+        exp = Expense() #TODO getCategory
         self.add_expense(exp)
         self.parent.exp_adder(exp)
 
@@ -148,8 +154,9 @@ class Table(QTableWidget):
 
 
 class ExpenceWidget(QWidget):
-    def __init__(self) -> None:
+    def __init__(self, ctg_view: EditCtgWindow) -> None:
         super().__init__()
+        self.ctg_view = ctg_view
 
         layout = QtWidgets.QVBoxLayout()
         message = QtWidgets.QLabel("Последние расходы")
@@ -160,11 +167,6 @@ class ExpenceWidget(QWidget):
         self.setLayout(layout)
         self.presenter = ExpensePresenter(self, RepositoryFactory())
 
-        #self.table.itemChanged.connect(self.table.update_exp_event)
-
-        #exp = Expense(amount=100.0, category=5, comment="ASD")
-        #self.exp_adder(exp)
-        #print(f'ADDED {exp}')
     def register_ctg_retriever(self, handler):
         self.ctg_retriever = handler
 

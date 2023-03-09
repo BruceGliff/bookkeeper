@@ -25,7 +25,6 @@ class CategoryItem(QTreeWidgetItem):
 
 
 class EditCtgWindow(QWidget):
-
     def __init__(self, ctgs: list[str]):
         super().__init__()
 
@@ -47,6 +46,9 @@ class EditCtgWindow(QWidget):
 
         self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
 
+    def get_selected_ctg(self) -> Category:
+        return self.ctgs_widget.currentItem() 
+
     def register_ctg_adder(self, handler):
         self.ctg_adder = handler
 
@@ -63,6 +65,8 @@ class EditCtgWindow(QWidget):
         table = self.ctgs_widget
         uniq_pk: dict[int, CategoryItem] = {}
 
+        setOnce: bool = False
+
         for x in ctgs:
             pk = x.pk
             parent = x.parent
@@ -74,6 +78,11 @@ class EditCtgWindow(QWidget):
 
             ctg_item = CategoryItem(parent_ctg, x)
             uniq_pk.update({pk: ctg_item})
+            if not setOnce:
+                table.setCurrentItem(ctg_item)
+                setOnce = True
+        
+
 
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
