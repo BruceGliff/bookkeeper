@@ -67,9 +67,6 @@ class TableItem(QTableWidgetItem):
 class TableAmountItem(TableItem):
     """Class represents Amount Item.
     """
-    def __init__(self, row: TableRow):
-        super().__init__(row)
-
     def validate(self) -> bool:
         """Vaildates if input is corrent.
 
@@ -150,9 +147,6 @@ class TableDateItem(TableItem):
     """Class represents Date Item.
     """
     fmt = "%Y-%m-%d %H:%M:%S"
-
-    def __init__(self, row: TableRow):
-        super().__init__(row)
 
     def validate(self) -> bool:
         """Vaildates if input is corrent.
@@ -298,7 +292,7 @@ class Table(QTableWidget):
                 titem.restore()
         except ValueError as vallerr:
             QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{vallerr}.\n'
-                                'Будут выставлены некоректные категории.')
+                                 'Будут выставлены некоректные категории.')
 
 
 class ExpenseWidget(QWidget):
@@ -350,8 +344,10 @@ class ExpenseWidget(QWidget):
             try:
                 self.table.add_expense(x)
             except ValueError as vallerr:
-                QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{vallerr}.\n'
-                    f'Запись {x.expense_date.strftime("%Y-%m-%d %H:%M:%S")} будет удалена.')
+                QMessageBox.critical(self, 'Ошибка',
+                                     f'Критическая ошибка.\n{vallerr}.\nЗапись '
+                                     f'{x.expense_date.strftime("%Y-%m-%d %H:%M:%S")}'
+                                     ' будет удалена.')
                 list_to_delete.append(x)
         for x in list_to_delete:
             self.exp_deleter(x)

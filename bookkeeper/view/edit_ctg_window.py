@@ -41,7 +41,7 @@ class EditCtgWindow(QWidget):
     """
     ctg_changed = QtCore.Signal()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.setWindowTitle("Изменение категорий")
@@ -160,7 +160,8 @@ class EditCtgWindow(QWidget):
             revert = self.rename_ctg
 
         if not self.ctg_checker(entered_text):
-            QMessageBox.critical(self, 'Ошибка', f'Category {entered_text} already exists')
+            QMessageBox.critical(self, 'Ошибка',
+                                 f'Category {entered_text} already exists')
             self.ctgs_widget.itemChanged.disconnect()
             revert(ctg_item, column)
             self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)

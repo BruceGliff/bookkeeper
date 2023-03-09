@@ -5,12 +5,14 @@ MainWindow view
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QWidget)
 
-from .expense_widget import ExpenseWidget
-from .budget_widget import BudgetWidget
-from .edit_ctg_window import EditCtgWindow
+from bookkeeper.view.expense_widget import ExpenseWidget
+from bookkeeper.view.budget_widget import BudgetWidget
+from bookkeeper.view.edit_ctg_window import EditCtgWindow
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    """Represents Main Window.
+    """
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Bookkeeper")
