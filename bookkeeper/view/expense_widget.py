@@ -1,5 +1,5 @@
 """
-Widget of expence table
+Widget of expense table
 """
 
 from PySide6 import QtWidgets, QtCore
@@ -214,7 +214,7 @@ class Table(QTableWidget):
             QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\nБудут выставлены некоректные категории.')
 
 
-class ExpenceWidget(QWidget):
+class ExpenseWidget(QWidget):
     exp_changed = QtCore.Signal()
 
     def __init__(self, ctg_view: EditCtgWindow) -> None:
