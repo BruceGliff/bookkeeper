@@ -4,7 +4,7 @@ Widget of budget table
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import (QWidget, QTableWidget, QTableWidgetItem, QMessageBox)
-from .presenters import CategoryPresenter
+from .presenters import BudgetPresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.budget import Budget
 

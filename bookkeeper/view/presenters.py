@@ -3,6 +3,7 @@ from typing import Protocol
 
 from bookkeeper.models.category import Category
 from bookkeeper.models.budget import Budget
+from bookkeeper.models.expense import Expense
 
 
 class AbstractView(Protocol):
@@ -82,10 +83,30 @@ class BudgetPresenter:
             bgt = Budget(0)
             self.repo.add(bgt)
             bgts.append(bgt)
-        
+
         assert len(bgts) == 1
         return bgts.pop()
-    
 
+
+class ExpensePresenter:
+    def __init__(self,  view: AbstractView, repository_factory):
+        self.view = view
+        self.repo = repository_factory.get(Expense)
+
+        self.exps = self.repo.get_all()
+        self.view.register_exp_adder(self.add_exp)
+        
+        self.view.set_exp_list(self.exps)
+        self.view.register_exp_deleter(self.delete_exp)
+
+        #self.view.register_rcd_modifier(self.modify_ctg)
+        #self.view.register_rcd_checker(self.check_name)
     
+    def add_exp(self, exp: Expense):
+        self.repo.add(exp)
+        self.exps.append(exp)
+
+    def delete_exp(self, row: int):
+        exp = self.exps.pop(row)
+        #self.repo.delete(exp.pk)
 
