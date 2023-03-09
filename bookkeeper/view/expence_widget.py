@@ -79,8 +79,7 @@ class TableCategoryItem(TableItem):
             # New ctg will have pk=0 and always drop here.
             ctg_item = self.ctg_view.get_selected_ctg()
             if ctg_item is None:
-                print('First select category!')
-                return
+                raise ValueError('Категория не установлена')
             ctg = ctg_item.ctg.name
             self.row.exp.category = ctg_item.ctg.pk
         self.setText(ctg)
@@ -162,17 +161,17 @@ class Table(QTableWidget):
 
         self.parent.exp_modifier(exp_item.row.exp)
 
-    def add_expense(self, exp: Expense) -> TableAmountItem:
-        self.itemChanged.disconnect()
+    def add_expense(self, exp: Expense):
+        row = TableRow(exp)
+        ctg_item = TableCategoryItem(row, self.parent)
         rc = self.rowCount()
         self.setRowCount(rc+1)
-        row = TableRow(exp)
+        self.itemChanged.disconnect()
         self.setItem(rc, 0, TableDateItem(row))
         self.setItem(rc, 1, TableAmountItem(row))
-        self.setItem(rc, 2, TableCategoryItem(row, self.parent))
+        self.setItem(rc, 2, ctg_item)
         self.setItem(rc, 3, TableItem(row))
         self.itemChanged.connect(self.update_exp_event)
-        return self.item(rc, 1)
 
     def delete_exp_event(self):
         row = self.currentRow()
@@ -184,12 +183,17 @@ class Table(QTableWidget):
         if confirm == QMessageBox.No:
             return
         self.removeRow(row)
-        self.parent.exp_deleter(row)
+        exp_to_del = self.item(row, 0).row.exp
+        self.parent.exp_deleter(exp_to_del)
         self.parent.emit_exp_changed()
 
     def add_exp_event(self):
         exp = Expense()
-        self.add_expense(exp)
+        try:
+            self.add_expense(exp)
+        except ValueError as ve:
+            QMessageBox.critical(self, 'Ошибка', f'{ve}')
+            return
         self.parent.exp_adder(exp)
         self.parent.emit_exp_changed()
 
@@ -197,8 +201,11 @@ class Table(QTableWidget):
         self.menu.exec_(event.globalPos())
 
     def update_ctgs(self):
-        for row in range(self.rowCount()):
-            self.item(row, 2).restore()
+        try:
+            for row in range(self.rowCount()):
+                self.item(row, 2).restore()
+        except ValueError as ve:
+            QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\nБудут выставлены некоректные категории.')
 
 
 class ExpenceWidget(QWidget):
@@ -230,8 +237,16 @@ class ExpenceWidget(QWidget):
         self.exp_modifier = handler
 
     def set_exp_list(self, data: list[Expense]):
+        list_to_delete: list[Expense] = []
         for x in data:
-            self.table.add_expense(x)
+            try:
+                self.table.add_expense(x)
+            except ValueError as ve:
+                QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\n'
+                    f'Запись {x.expense_date.strftime("%Y-%m-%d %H:%M:%S")} будет удалена.')
+                list_to_delete.append(x)
+        for x in list_to_delete:
+            self.exp_deleter(x)
 
     def update_ctgs(self):
         self.table.update_ctgs()

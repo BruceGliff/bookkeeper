@@ -141,8 +141,8 @@ class ExpensePresenter:
         self.repo.add(exp)
         self.exps.append(exp)
 
-    def delete_exp(self, row: int):
-        exp = self.exps.pop(row)
+    def delete_exp(self, exp: Expense):
+        self.exps.remove(exp)
         self.repo.delete(exp.pk)
 
     def modify_exp(self, exp: Expense):
