@@ -4,6 +4,8 @@ Widget of budget table
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import (QWidget, QTableWidget, QTableWidgetItem, QMessageBox)
+from .presenters import CategoryPresenter
+from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.budget import Budget
 
 
@@ -105,11 +107,19 @@ class BudgetWidget(QWidget):
         layout.addWidget(self.expenses_table)
         self.setLayout(layout)
 
+        self.presenter = BudgetPresenter(self, RepositoryFactory())
+
         expenses = get_expenses_from_expenses_tbl()
-        bgt = get_budget()
+        bgt = self.bgt_getter()
 
         self.update_expenses(expenses)
         self.update_budget(bgt)
+    
+    def register_bgt_getter(self, handler):
+        self.bgt_getter = handler
+    
+    def register_bgt_modifier(self, handler):
+        self.bgt_modifier = handler
 
     def edit_bgt_event(self, bgt_item: QTableWidgetItem):
         value = bgt_item.get_value()
@@ -117,6 +127,7 @@ class BudgetWidget(QWidget):
             QMessageBox.critical(self, 'Ошибка', 'Используйте только числа.')
         else:
             bgt_item.bgt.amount = value
+            self.bgt_modifier(bgt_item.bgt)
             #TODO update repo
 
         self.update_budget(bgt_item.bgt)

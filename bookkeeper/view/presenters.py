@@ -21,6 +21,12 @@ class AbstractView(Protocol):
     def register_ctg_deleter(handler):
         pass
 
+    def register_bgt_modifier(handler):
+        pass
+    
+    def register_bgt_getter(handler):
+        pass
+
 
 class CategoryPresenter:
     def __init__(self,  view: AbstractView, repository_factory):
@@ -64,4 +70,22 @@ class BudgetPresenter:
     def __init__(self,  view: AbstractView, repository_factory):
         self.view = view
         self.repo = repository_factory.get(Budget)
+        self.view.register_bgt_modifier(self.modify_bgt)
+        self.view.register_bgt_getter(self.get_bgt)
+
+    def modify_bgt(self, bgt: Budget):
+        self.repo.update(bgt)
+
+    def get_bgt(self) -> Budget:
+        bgts = self.repo.get_all()
+        if len(bgts) == 0:
+            bgt = Budget(0)
+            self.repo.add(bgt)
+            bgts.append(bgt)
+        
+        assert len(bgts) == 1
+        return bgts.pop()
+    
+
+    
 

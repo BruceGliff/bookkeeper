@@ -20,6 +20,8 @@ def gettype(attr: Any) -> str:
     """
     if isinstance(attr, int | None):
         return 'INTEGER'
+    if isinstance(attr, float):
+        return 'REAL'
     return 'TEXT'
 
 
