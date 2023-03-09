@@ -1,3 +1,6 @@
+"""Module responsible for entry point of UI application.
+"""
+
 import sys
 
 from PySide6 import QtWidgets

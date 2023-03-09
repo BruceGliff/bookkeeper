@@ -17,7 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         layout = QtWidgets.QVBoxLayout()
 
-        edit_field = EditCtgWindow([])
+        edit_field = EditCtgWindow()
         expense = ExpenseWidget(edit_field)
         edit_field.ctg_changed.connect(expense.update_ctgs)
         budget = BudgetWidget(expense.presenter)

@@ -1,34 +1,47 @@
 """
-Widget of editing categories
+Widget of editing categories.
 """
 
+from typing import Any, Callable
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import (QWidget, QTreeWidgetItem, QMenu, QMessageBox)
-from typing import Any, Callable
 
-from .presenters import CategoryPresenter
+from bookkeeper.view.presenters import CategoryPresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.category import Category
 
 
 class CategoryItem(QTreeWidgetItem):
+    """Class represents QTreeWidgetItem with custom modifications.
+    """
     def __init__(self, parent: Any, ctg: Category):
         super().__init__(parent, [ctg.name])
         self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
         self.ctg = ctg
 
     def update(self, name: str) -> None:
+        """Sets name of category.
+
+        Args:
+            name (str): name to set in category.
+        """
         self.ctg.name = name
 
-    # TODO this does not work if ctg.name is changed.
     def __str__(self) -> str:
+        """Convertion to string.
+
+        Returns:
+            str: name of category.
+        """
         return self.ctg.name
 
 
 class EditCtgWindow(QWidget):
+    """Class represents Widget of category editing.
+    """
     ctg_changed = QtCore.Signal()
 
-    def __init__(self, ctgs: list[str]):
+    def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Изменение категорий")
@@ -50,29 +63,48 @@ class EditCtgWindow(QWidget):
         self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
 
     def get_selected_ctg(self) -> QTreeWidgetItem:
+        """Returns selected QTreeWidgetItem.
+
+        Returns:
+            QTreeWidgetItem: selected Item
+        """
         return self.ctgs_widget.currentItem()
 
     def register_ctg_adder(self, handler: Callable[[Category], None]) -> None:
+        """Register of ctg_adder.
+        """
         self.ctg_adder = handler
 
     def register_ctg_modifier(self, handler: Callable[[Category], None]) -> None:
+        """Register of ctg_modifier.
+        """
         self.ctg_modifier = handler
 
     def register_ctg_checker(self, handler: Callable[[str], bool]) -> None:
+        """Register of ctg_checker.
+        """
         self.ctg_checker = handler
 
     def register_ctg_deleter(self, handler: Callable[[Category], None]) -> None:
+        """Register of ctg_deleter.
+        """
         self.ctg_deleter = handler
 
     def register_ctg_finder(self, handler: Callable[[str], None | int]) -> None:
+        """Register of ctg_finder.
+        """
         self.ctg_finder = handler
 
     def set_ctg_list(self, ctgs: list[Category]) -> None:
+        """Sets widget based on ctgs.
+
+        Args:
+            ctgs (list[Category]): Categories to set.
+        """
         table = self.ctgs_widget
         uniq_pk: dict[int, CategoryItem] = {}
 
-        setOnce: bool = False
-
+        set_once: bool = False
         for x in ctgs:
             pk = x.pk
             parent = x.parent
@@ -84,21 +116,40 @@ class EditCtgWindow(QWidget):
 
             ctg_item = CategoryItem(parent_ctg, x)
             uniq_pk.update({pk: ctg_item})
-            if not setOnce:
+            if not set_once:
                 table.setCurrentItem(ctg_item)
-                setOnce = True
+                set_once = True
 
     def contextMenuEvent(self, event: Any) -> None:
+        """Mouse action.
+        """
         self.menu.exec_(event.globalPos())
 
     def delete_ctg(self, ctg_item: CategoryItem, *_: int) -> None:
+        """Deletes ctg_item from widget.
+
+        Args:
+            ctg_item (CategoryItem): Item to delete.
+        """
         root = self.ctgs_widget.invisibleRootItem()
         (ctg_item.parent() or root).removeChild(ctg_item)
 
     def rename_ctg(self, ctg_item: CategoryItem, column: int) -> None:
+        """Sets name of category.
+
+        Args:
+            ctg_item (CategoryItem): Item to get category from.
+            column (int): column of item.
+        """
         ctg_item.setText(column, ctg_item.ctg.name)
 
     def edit_ctg_event(self, ctg_item: CategoryItem, column: int) -> None:
+        """Event for processing category changes.
+
+        Args:
+            ctg_item (CategoryItem): Changed category
+            column (int): column
+        """
         entered_text = ctg_item.text(column)
 
         if ctg_item.ctg.pk == 0:
@@ -119,6 +170,8 @@ class EditCtgWindow(QWidget):
             self.ctg_changed.emit()
 
     def add_ctg_event(self) -> None:
+        """Event for processing Add action. Creates new category.
+        """
         ctg_items = self.ctgs_widget.selectedItems()
         if len(ctg_items) == 0:
             parent_item: Any = self.ctgs_widget
@@ -135,14 +188,18 @@ class EditCtgWindow(QWidget):
         self.ctgs_widget.edit(self.ctgs_widget.currentIndex())
 
     def delete_ctg_event(self) -> None:
+        """Event for processing Delete action. Deletes selected category.
+        """
         ctg_item = self.ctgs_widget.currentItem()
+        if ctg_item is None:
+            return
         confirm = QMessageBox.warning(self, 'Внимание',
                                       f'Вы уверены, что хотите удалить текущую "'
                                       f'{ctg_item.ctg.name}" и все дочерние категории?',
                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if confirm == QMessageBox.No:
             return
-        
+
         assert isinstance(ctg_item, CategoryItem)
         self.delete_ctg(ctg_item)
         if ctg_item.ctg.pk == 0:
