@@ -108,5 +108,5 @@ class ExpensePresenter:
 
     def delete_exp(self, row: int):
         exp = self.exps.pop(row)
-        #self.repo.delete(exp.pk)
+        self.repo.delete(exp.pk)
 
