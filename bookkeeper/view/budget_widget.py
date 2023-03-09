@@ -7,64 +7,92 @@ from PySide6.QtWidgets import (QWidget, QTableWidget, QTableWidgetItem, QMessage
 from .presenters import BudgetPresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.budget import Budget
+from typing import Any
+from abc import ABC, abstractmethod
+
+
+class AbstractItem(ABC):
+    @abstractmethod
+    def get_value(self) -> None | float:
+        """_summary_
+        """
+
+    @abstractmethod
+    def update(self, bgt: Budget) -> None:
+        """_summary_
+        """
+
+    @abstractmethod
+    def get(self) -> Budget:
+        """_summary_
+        """
 
 
 class LimitDayItem(QTableWidgetItem):
+    __metaclass__ = AbstractItem
+
     def __init__(self, bgt: Budget):
         super().__init__()
         self.update(bgt)
 
-    def get_value(self):
+    def get_value(self) -> None | float:
         try:
             return float(self.text())
         except ValueError:
             return None
 
-    def update(self, bgt: Budget):
-        #TODO change string if budget changes
+    def update(self, bgt: Budget) -> None:
         self.bgt = bgt
         self.setText(str(self.bgt.amount))
-        pass
+
+    def get(self) -> Budget:
+        return self.bgt
 
 
 class LimitWeekItem(QTableWidgetItem):
+    __metaclass__ = AbstractItem
+
     def __init__(self, bgt: Budget):
         super().__init__()
         self.update(bgt)
 
-    def get_value(self):
+    def get_value(self) -> None | float:
         try:
             return float(self.text()) / 7
         except ValueError:
             return None
 
-    def update(self, bgt: Budget):
-        #TODO change string if budget changes
+    def update(self, bgt: Budget) -> None:
         self.bgt = bgt
         self.setText(str(self.bgt.amount * 7))
-        pass
+    
+    def get(self) -> Budget:
+        return self.bgt
 
 
 class LimitMonthItem(QTableWidgetItem):
+    __metaclass__ = AbstractItem
+
     def __init__(self, bgt: Budget):
         super().__init__()
         self.update(bgt)
 
-    def get_value(self):
+    def get_value(self) -> None | float:
         try:
             return float(self.text()) / 30
         except ValueError:
             return None
 
-    def update(self, bgt: Budget):
-        #TODO change string if budget changes
+    def update(self, bgt: Budget) -> None:
         self.bgt = bgt
         self.setText(str(self.bgt.amount * 30))
-        pass
+    
+    def get(self) -> Budget:
+        return self.bgt
 
 
 class BudgetWidget(QWidget):
-    def __init__(self, exp_presenter) -> None:
+    def __init__(self, exp_presenter: Any) -> None:
         super().__init__()
         self.exp_presenter = exp_presenter
 
@@ -90,7 +118,7 @@ class BudgetWidget(QWidget):
             lost_item = QtWidgets.QTableWidgetItem()
             lost_item.setFlags(lost_item.flags() & ~QtCore.Qt.ItemIsEditable)
             self.expenses_table.setItem(i, 0, lost_item)
-        
+
         bgt: Budget = Budget(1)
         self.expenses_table.setItem(0, 1, LimitDayItem(bgt))
         self.expenses_table.setItem(1, 1, LimitWeekItem(bgt))
@@ -107,25 +135,25 @@ class BudgetWidget(QWidget):
 
         self.update_expenses(expenses)
         self.update_budget(bgt)
-    
-    def register_bgt_getter(self, handler):
+
+    def register_bgt_getter(self, handler) -> None:
         self.bgt_getter = handler
-    
-    def register_bgt_modifier(self, handler):
+
+    def register_bgt_modifier(self, handler) -> None:
         self.bgt_modifier = handler
 
-    def register_exp_getter(self, handler):
+    def register_exp_getter(self, handler) -> None:
         self.exp_getter = handler
 
-    def edit_bgt_event(self, bgt_item: QTableWidgetItem):
+    def edit_bgt_event(self, bgt_item: AbstractItem) -> None:
         value = bgt_item.get_value()
         if value is None:
             QMessageBox.critical(self, 'Ошибка', 'Используйте только числа.')
         else:
-            bgt_item.bgt.amount = value
-            self.bgt_modifier(bgt_item.bgt)
+            bgt_item.get().amount = value
+            self.bgt_modifier(bgt_item.get())
 
-        self.update_budget(bgt_item.bgt)
+        self.update_budget(bgt_item.get())
 
     def update_expenses(self, exps: list[float]) -> None:
         self.expenses_table.itemChanged.disconnect()
@@ -137,8 +165,10 @@ class BudgetWidget(QWidget):
     def update_budget(self, bgt: Budget) -> None:
         self.expenses_table.itemChanged.disconnect()
         for i in range(3):
-            self.expenses_table.item(i, 1).update(bgt)
+            bitem = self.expenses_table.item(i, 1)
+            assert isinstance(bitem, (LimitDayItem, LimitMonthItem, LimitWeekItem))
+            bitem.update(bgt)
         self.expenses_table.itemChanged.connect(self.edit_bgt_event)
 
-    def retrieve_exp(self):
+    def retrieve_exp(self) -> None:
         self.update_expenses(self.exp_getter())
