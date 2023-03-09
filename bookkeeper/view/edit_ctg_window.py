@@ -145,5 +145,7 @@ class EditCtgWindow(QWidget):
         
         assert isinstance(ctg_item, CategoryItem)
         self.delete_ctg(ctg_item)
+        if ctg_item.ctg.pk == 0:
+            return
         self.ctg_deleter(ctg_item.ctg)
         self.ctg_changed.emit()
