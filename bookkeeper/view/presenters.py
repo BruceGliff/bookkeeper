@@ -19,19 +19,19 @@ class AbstractBudgetView(Protocol):
 
 
 class AbstractExpenseView(Protocol):
-    def register_exp_adder(self, handler) -> None:
+    def register_exp_adder(self, handler: Callable[[Expense], None]) -> None:
         pass
 
-    def register_exp_deleter(self, handler) -> None:
+    def register_exp_deleter(self, handler: Callable[[Expense], None]) -> None:
         pass
 
-    def register_exp_modifier(self, handler) -> None:
+    def register_exp_modifier(self, handler: Callable[[Expense], None]) -> None:
         pass
 
-    def register_ctg_retriever(self, handler) -> None:
+    def register_ctg_retriever(self, handler: Callable[[int], str | None]) -> None:
         pass
 
-    def set_exp_list(self, handler) -> None:
+    def set_exp_list(self, data: list[Expense]) -> None:
         pass
 
 
@@ -147,7 +147,7 @@ class ExpensePresenter:
         self.view.register_ctg_retriever(self.retrieve_ctg)
         self.view.set_exp_list(self.exps)
 
-    def retrieve_ctg(self, pk: int) -> str:
+    def retrieve_ctg(self, pk: int) -> str | None:
         ctg = self.ctg_repo.get(pk)
         if ctg is None:
             return None

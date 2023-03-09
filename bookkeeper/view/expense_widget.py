@@ -5,12 +5,12 @@ Widget of expense table
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import (QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem)
 from datetime import datetime
-import typing
-from typing import Any
+from typing import Any, Callable
 
 from .presenters import ExpensePresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.expense import Expense
+from bookkeeper.models.category import Category
 from .edit_ctg_window import EditCtgWindow
 
 
@@ -24,7 +24,7 @@ class TableItem(QTableWidgetItem):
         super().__init__()
         self.trow = row
         self.restore()
-    
+
     def validate(self) -> bool:
         return True
 
@@ -74,7 +74,7 @@ class TableCategoryItem(TableItem):
     def validate(self) -> bool:
         ctg_name = self.text()
         return not self.ctg_view.ctg_checker(ctg_name)
-    
+
     def restore(self) -> None:
         ctg = self.retriever(self.trow.exp.category)
         if ctg is None:
@@ -230,16 +230,16 @@ class ExpenseWidget(QWidget):
         self.setLayout(layout)
         self.presenter = ExpensePresenter(self, RepositoryFactory())
 
-    def register_ctg_retriever(self, handler) -> None:
+    def register_ctg_retriever(self, handler: Callable[[int], None | str]) -> None:
         self.ctg_retriever = handler
 
-    def register_exp_adder(self, handler) -> None:
+    def register_exp_adder(self, handler: Callable[[Expense], None]) -> None:
         self.exp_adder = handler
 
-    def register_exp_deleter(self, handler) -> None:
+    def register_exp_deleter(self, handler: Callable[[Expense], None]) -> None:
         self.exp_deleter = handler
 
-    def register_exp_modifier(self, handler) -> None:
+    def register_exp_modifier(self, handler: Callable[[Expense], None]) -> None:
         self.exp_modifier = handler
 
     def set_exp_list(self, data: list[Expense]) -> None:
