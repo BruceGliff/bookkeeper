@@ -4,6 +4,7 @@ Widget of expence table
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import (QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem)
+from datetime import datetime
 
 from .presenters import ExpensePresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
@@ -34,6 +35,9 @@ class TableItem(QTableWidgetItem):
     def get_err_msg(self) -> str:
         pass
 
+    def should_emit_on_upd(self) -> bool:
+        return False
+
 
 class TableAmountItem(TableItem):
     def __init__(self, row: TableRow):
@@ -54,6 +58,9 @@ class TableAmountItem(TableItem):
 
     def get_err_msg(self) -> str:
         return 'Нужно ввести действительное число.'
+
+    def should_emit_on_upd(self) -> bool:
+        return True
 
 
 class TableCategoryItem(TableItem):
@@ -88,12 +95,31 @@ class TableCategoryItem(TableItem):
 
 
 class TableDateItem(TableItem):
+    fmt = "%Y-%m-%d %H:%M:%S"
+
     def __init__(self, row: TableRow):
         super().__init__(row)
-        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+
+    def validate(self) -> bool:
+        date_str = self.text()
+        try:
+            datetime.fromisoformat(date_str)
+        except ValueError:
+            return False
+        return True
 
     def restore(self):
-        self.setText(str(self.row.exp.expense_date))
+        date = self.row.exp.expense_date
+        self.setText(date.strftime(self.fmt))
+
+    def get_err_msg(self) -> str:
+        return f'Неверный формат даты.\nИспользуйте {self.fmt}'
+
+    def update(self):
+        self.row.exp.expense_date = datetime.fromisoformat(self.text())
+    
+    def should_emit_on_upd(self) -> bool:
+        return True
 
 
 class Table(QTableWidget):
@@ -131,7 +157,7 @@ class Table(QTableWidget):
 
         exp_item.update()
 
-        if isinstance(exp_item, TableAmountItem):
+        if exp_item.should_emit_on_upd():
             self.parent.emit_exp_changed()
 
         self.parent.exp_modifier(exp_item.row.exp)
