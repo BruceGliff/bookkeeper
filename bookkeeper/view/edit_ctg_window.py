@@ -61,6 +61,9 @@ class EditCtgWindow(QWidget):
     def register_ctg_deleter(self, handler):
         self.ctg_deleter = handler
 
+    def register_ctg_finder(self, handler):
+        self.ctg_finder = handler
+
     def set_ctg_list(self, ctgs: list[Category]) -> None:
         table = self.ctgs_widget
         uniq_pk: dict[int, CategoryItem] = {}

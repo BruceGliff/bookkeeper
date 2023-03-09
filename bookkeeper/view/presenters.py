@@ -19,6 +19,9 @@ class AbstractView(Protocol):
     def register_ctg_checker(handler):
         pass
 
+    def register_ctg_finder(handler):
+        pass
+
     def register_ctg_deleter(handler):
         pass
 
@@ -43,6 +46,7 @@ class CategoryPresenter:
         self.view.register_ctg_adder(self.add_ctg)
         self.view.register_ctg_checker(self.check_name)
         self.view.register_ctg_deleter(self.delete_ctg)
+        self.view.register_ctg_finder(self.find_ctg_by_name)
 
     def modify_ctg(self, ctg: Category) -> None:
         self.ctg_repo.update(ctg)
@@ -51,6 +55,12 @@ class CategoryPresenter:
         if name in [c.name for c in self.ctgs]:
             return False
         return True
+
+    def find_ctg_by_name(self, name: str) -> int | None:
+        for x in self.ctgs:
+            if x.name == name:
+                return x.pk
+        return None
 
     def add_ctg(self, ctg: Category) -> None:
         self.ctg_repo.add(ctg)

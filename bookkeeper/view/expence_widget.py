@@ -32,6 +32,9 @@ class TableItem(QTableWidgetItem):
     def update(self):
         self.row.exp.comment = self.text()
 
+    def get_err_msg(self) -> str:
+        pass
+
 
 class TableAmountItem(TableItem):
     def __init__(self, row: TableRow):
@@ -50,6 +53,9 @@ class TableAmountItem(TableItem):
     def update(self):
         self.row.exp.amount = float(self.text())
 
+    def get_err_msg(self) -> str:
+        return 'Нужно ввести действительное число.'
+
 
 class TableCategoryItem(TableItem):
     def __init__(self, row: TableRow, exp_view):
@@ -58,21 +64,28 @@ class TableCategoryItem(TableItem):
         super().__init__(row)
 
     def validate(self) -> bool:
-        # TODO
-        return True
+        ctg_name = self.text()
+        return not self.ctg_view.ctg_checker(ctg_name)
     
     def restore(self):
         ctg = self.retriever(self.row.exp.category)
         if ctg is None:
+            # New ctg will have pk=0 and always drop here.
             ctg_item = self.ctg_view.get_selected_ctg()
             if ctg_item is None:
                 print('First select category!')
                 return
             ctg = ctg_item.ctg.name
+            self.row.exp.category = ctg_item.ctg.pk
         self.setText(ctg)
     
     def update(self):
-        self.row.exp.category = int(self.text())
+        pk = self.ctg_view.ctg_finder(self.text())
+        assert pk is not None
+        self.row.exp.category = pk
+    
+    def get_err_msg(self) -> str:
+        return 'Нужно ввести существующую категорию.'
 
 
 class TableDateItem(TableItem):
@@ -112,7 +125,7 @@ class Table(QTableWidget):
     def update_exp_event(self, exp_item: TableItem):
         if not exp_item.validate():
             self.itemChanged.disconnect()
-            QMessageBox.critical(self, 'Ошибка', f'Нужно ввести число')
+            QMessageBox.critical(self, 'Ошибка', exp_item.get_err_msg())
             exp_item.restore()
             self.itemChanged.connect(self.update_exp_event)
             return
