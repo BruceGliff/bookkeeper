@@ -1,5 +1,6 @@
 
 from typing import Protocol
+from datetime import datetime, timedelta
 
 from bookkeeper.models.category import Category
 from bookkeeper.models.budget import Budget
@@ -27,11 +28,14 @@ class AbstractView(Protocol):
 
     def register_bgt_modifier(handler):
         pass
-    
+
     def register_bgt_getter(handler):
         pass
 
     def register_ctg_retriever(handler):
+        pass
+
+    def register_exp_getter(handler):
         pass
 
 
@@ -83,9 +87,22 @@ class CategoryPresenter:
 class BudgetPresenter:
     def __init__(self,  view: AbstractView, repository_factory):
         self.view = view
+        self.exp_presenter = self.view.exp_presenter
         self.repo = repository_factory.get(Budget)
         self.view.register_bgt_modifier(self.modify_bgt)
         self.view.register_bgt_getter(self.get_bgt)
+        self.view.register_exp_getter(self.get_exp)
+
+    def get_exp(self) -> list[float]:
+        now = datetime.now()
+        day = now - timedelta(days=1)
+        week = now - timedelta(weeks=1)
+        month = now - timedelta(days=30)
+
+        exp_day = sum(self.exp_presenter.get_expenses_from_till(now, day))
+        exp_week = sum(self.exp_presenter.get_expenses_from_till(now, week))
+        exp_month = sum(self.exp_presenter.get_expenses_from_till(now, month))
+        return [exp_day, exp_week, exp_month]
 
     def modify_bgt(self, bgt: Budget):
         self.repo.update(bgt)
@@ -131,3 +148,8 @@ class ExpensePresenter:
     def modify_exp(self, exp: Expense):
         self.repo.update(exp)
 
+    def get_expenses_from_till(self, start: datetime, end: datetime) -> list[float]:
+        assert start > end
+        exps = [x.amount for x in self.exps
+                if x.expense_date < start and x.expense_date > end]
+        return exps

@@ -9,14 +9,6 @@ from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.budget import Budget
 
 
-def get_expenses_from_expenses_tbl():
-    return [1, 2, 3]
-
-
-def get_budget():
-    return Budget(100)
-
-
 class LimitDayItem(QTableWidgetItem):
     def __init__(self, bgt: Budget):
         super().__init__()
@@ -72,8 +64,9 @@ class LimitMonthItem(QTableWidgetItem):
 
 
 class BudgetWidget(QWidget):
-    def __init__(self) -> None:
+    def __init__(self, exp_presenter) -> None:
         super().__init__()
+        self.exp_presenter = exp_presenter
 
         layout = QtWidgets.QVBoxLayout()
         message = QtWidgets.QLabel("Бюджет")
@@ -109,7 +102,7 @@ class BudgetWidget(QWidget):
 
         self.presenter = BudgetPresenter(self, RepositoryFactory())
 
-        expenses = get_expenses_from_expenses_tbl()
+        expenses = self.exp_getter()
         bgt = self.bgt_getter()
 
         self.update_expenses(expenses)
@@ -121,6 +114,9 @@ class BudgetWidget(QWidget):
     def register_bgt_modifier(self, handler):
         self.bgt_modifier = handler
 
+    def register_exp_getter(self, handler):
+        self.exp_getter = handler
+
     def edit_bgt_event(self, bgt_item: QTableWidgetItem):
         value = bgt_item.get_value()
         if value is None:
@@ -128,15 +124,21 @@ class BudgetWidget(QWidget):
         else:
             bgt_item.bgt.amount = value
             self.bgt_modifier(bgt_item.bgt)
-            #TODO update repo
 
         self.update_budget(bgt_item.bgt)
 
-    def update_expenses(self, exs: list[float]) -> None:
-        pass
+    def update_expenses(self, exps: list[float]) -> None:
+        self.expenses_table.itemChanged.disconnect()
+        assert len(exps) == 3
+        for i, exp in enumerate(exps):
+            self.expenses_table.item(i, 0).setText(str(exp))
+        self.expenses_table.itemChanged.connect(self.edit_bgt_event)
 
     def update_budget(self, bgt: Budget) -> None:
         self.expenses_table.itemChanged.disconnect()
         for i in range(3):
             self.expenses_table.item(i, 1).update(bgt)
         self.expenses_table.itemChanged.connect(self.edit_bgt_event)
+
+    def retrieve_exp(self):
+        self.update_expenses(self.exp_getter())

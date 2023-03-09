@@ -4,7 +4,6 @@ Widget of expence table
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import (QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem)
-from datetime import datetime
 
 from .presenters import ExpensePresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
@@ -131,6 +130,10 @@ class Table(QTableWidget):
             return
 
         exp_item.update()
+
+        if isinstance(exp_item, TableAmountItem):
+            self.parent.emit_exp_changed()
+
         self.parent.exp_modifier(exp_item.row.exp)
 
     def add_expense(self, exp: Expense) -> TableAmountItem:
@@ -156,11 +159,13 @@ class Table(QTableWidget):
             return
         self.removeRow(row)
         self.parent.exp_deleter(row)
+        self.parent.emit_exp_changed()
 
     def add_exp_event(self):
-        exp = Expense() #TODO getCategory
+        exp = Expense()
         self.add_expense(exp)
         self.parent.exp_adder(exp)
+        self.parent.emit_exp_changed()
 
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
@@ -171,6 +176,8 @@ class Table(QTableWidget):
 
 
 class ExpenceWidget(QWidget):
+    exp_changed = QtCore.Signal()
+
     def __init__(self, ctg_view: EditCtgWindow) -> None:
         super().__init__()
         self.ctg_view = ctg_view
@@ -192,7 +199,7 @@ class ExpenceWidget(QWidget):
 
     def register_exp_deleter(self, handler):
         self.exp_deleter = handler
-    
+
     def register_exp_modifier(self, handler):
         self.exp_modifier = handler
 
@@ -202,3 +209,6 @@ class ExpenceWidget(QWidget):
 
     def update_ctgs(self):
         self.table.update_ctgs()
+
+    def emit_exp_changed(self):
+        self.exp_changed.emit()
