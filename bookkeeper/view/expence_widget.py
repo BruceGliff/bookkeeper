@@ -108,10 +108,7 @@ class Table(QTableWidget):
             return
 
         exp_item.update()
-        print(exp_item.row.exp)
-        #self.parent.repo.ext_modifier(exp_item.row.exp)
-
-
+        self.parent.exp_modifier(exp_item.row.exp)
 
     def add_expense(self, exp: Expense) -> TableAmountItem:
         self.itemChanged.disconnect()
@@ -170,6 +167,9 @@ class ExpenceWidget(QWidget):
 
     def register_exp_deleter(self, handler):
         self.exp_deleter = handler
+    
+    def register_exp_modifier(self, handler):
+        self.exp_modifier = handler
 
     def set_exp_list(self, data: list[Expense]):
         for x in data:

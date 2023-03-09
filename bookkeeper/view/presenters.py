@@ -98,9 +98,7 @@ class ExpensePresenter:
         
         self.view.set_exp_list(self.exps)
         self.view.register_exp_deleter(self.delete_exp)
-
-        #self.view.register_rcd_modifier(self.modify_ctg)
-        #self.view.register_rcd_checker(self.check_name)
+        self.view.register_exp_modifier(self.modify_exp)
     
     def add_exp(self, exp: Expense):
         self.repo.add(exp)
@@ -109,4 +107,7 @@ class ExpensePresenter:
     def delete_exp(self, row: int):
         exp = self.exps.pop(row)
         self.repo.delete(exp.pk)
+
+    def modify_exp(self, exp: Expense):
+        self.repo.update(exp)
 
