@@ -1,21 +1,11 @@
 
-from typing import Protocol, Callable
+from typing import Protocol, Callable, Any
 from datetime import datetime, timedelta
 
+from bookkeeper.repository.repository_factory import AbsRepoFactory
 from bookkeeper.models.category import Category
 from bookkeeper.models.budget import Budget
 from bookkeeper.models.expense import Expense
-
-
-class AbstractBudgetView(Protocol):
-    def register_bgt_modifier(self, handler: Callable[[Budget], None]) -> None:
-        pass
-
-    def register_bgt_getter(self, handler: Callable[[], Budget]) -> None:
-        pass
-
-    def register_exp_getter(self, handler: Callable[[], list[float]]) -> None:
-        pass
 
 
 class AbstractExpenseView(Protocol):
@@ -36,27 +26,27 @@ class AbstractExpenseView(Protocol):
 
 
 class AbstractCategoryView(Protocol):
-    def set_ctg_list(self, notused: list[Category]) -> None:
+    def set_ctg_list(self, ctgs: list[Category]) -> None:
         pass
 
-    def register_ctg_modifier(self, handler) -> None:
+    def register_ctg_modifier(self, handler: Callable[[Category], None]) -> None:
         pass
 
-    def register_ctg_adder(self, handler) -> None:
+    def register_ctg_adder(self, handler: Callable[[Category], None]) -> None:
         pass
 
-    def register_ctg_checker(self, handler) -> None:
+    def register_ctg_checker(self, handler: Callable[[str], bool]) -> None:
         pass
 
-    def register_ctg_finder(self, handler) -> None:
+    def register_ctg_finder(self, handler: Callable[[str], None | int]) -> None:
         pass
 
-    def register_ctg_deleter(self, handler) -> None:
+    def register_ctg_deleter(self, handler: Callable[[Category], None]) -> None:
         pass
 
 
 class CategoryPresenter:
-    def __init__(self,  view: AbstractCategoryView, repository_factory):
+    def __init__(self,  view: AbstractCategoryView, repository_factory: AbsRepoFactory):
         self.view = view
         self.ctg_repo = repository_factory.get(Category)
 
@@ -100,8 +90,58 @@ class CategoryPresenter:
             self.ctg_repo.delete(x.pk)
 
 
+class ExpensePresenter:
+    def __init__(self,  view: AbstractExpenseView, repository_factory: AbsRepoFactory):
+        self.view = view
+        self.repo = repository_factory.get(Expense)
+        self.ctg_repo = repository_factory.get(Category)
+
+        self.exps = self.repo.get_all()
+        self.view.register_exp_adder(self.add_exp)
+        self.view.register_exp_deleter(self.delete_exp)
+        self.view.register_exp_modifier(self.modify_exp)
+        self.view.register_ctg_retriever(self.retrieve_ctg)
+        self.view.set_exp_list(self.exps)
+
+    def retrieve_ctg(self, pk: int) -> str | None:
+        ctg = self.ctg_repo.get(pk)
+        if ctg is None:
+            return None
+        return ctg.name
+
+    def add_exp(self, exp: Expense) -> None:
+        self.repo.add(exp)
+        self.exps.append(exp)
+
+    def delete_exp(self, exp: Expense) -> None:
+        self.exps.remove(exp)
+        self.repo.delete(exp.pk)
+
+    def modify_exp(self, exp: Expense) -> None:
+        self.repo.update(exp)
+
+    def get_expenses_from_till(self, start: datetime, end: datetime) -> list[float]:
+        assert start > end
+        exps = [x.amount for x in self.exps
+                if x.expense_date < start and x.expense_date > end]
+        return exps
+
+
+class AbstractBudgetView(Protocol):
+    exp_presenter: ExpensePresenter
+
+    def register_bgt_modifier(self, handler: Callable[[Budget], None]) -> None:
+        pass
+
+    def register_bgt_getter(self, handler: Callable[[], Budget]) -> None:
+        pass
+
+    def register_exp_getter(self, handler: Callable[[], list[float]]) -> None:
+        pass
+
+
 class BudgetPresenter:
-    def __init__(self,  view: AbstractBudgetView, repository_factory):
+    def __init__(self,  view: AbstractBudgetView, repository_factory: AbsRepoFactory):
         self.view = view
         self.exp_presenter = self.view.exp_presenter
         self.repo = repository_factory.get(Budget)
@@ -120,7 +160,7 @@ class BudgetPresenter:
         exp_month = sum(self.exp_presenter.get_expenses_from_till(now, month))
         return [exp_day, exp_week, exp_month]
 
-    def modify_bgt(self, bgt: Budget):
+    def modify_bgt(self, bgt: Budget) -> None:
         self.repo.update(bgt)
 
     def get_bgt(self) -> Budget:
@@ -132,40 +172,3 @@ class BudgetPresenter:
 
         assert len(bgts) == 1
         return bgts.pop()
-
-
-class ExpensePresenter:
-    def __init__(self,  view: AbstractExpenseView, repository_factory):
-        self.view = view
-        self.repo = repository_factory.get(Expense)
-        self.ctg_repo = repository_factory.get(Category)
-
-        self.exps = self.repo.get_all()
-        self.view.register_exp_adder(self.add_exp)
-        self.view.register_exp_deleter(self.delete_exp)
-        self.view.register_exp_modifier(self.modify_exp)
-        self.view.register_ctg_retriever(self.retrieve_ctg)
-        self.view.set_exp_list(self.exps)
-
-    def retrieve_ctg(self, pk: int) -> str | None:
-        ctg = self.ctg_repo.get(pk)
-        if ctg is None:
-            return None
-        return ctg.name
-
-    def add_exp(self, exp: Expense):
-        self.repo.add(exp)
-        self.exps.append(exp)
-
-    def delete_exp(self, exp: Expense):
-        self.exps.remove(exp)
-        self.repo.delete(exp.pk)
-
-    def modify_exp(self, exp: Expense):
-        self.repo.update(exp)
-
-    def get_expenses_from_till(self, start: datetime, end: datetime) -> list[float]:
-        assert start > end
-        exps = [x.amount for x in self.exps
-                if x.expense_date < start and x.expense_date > end]
-        return exps

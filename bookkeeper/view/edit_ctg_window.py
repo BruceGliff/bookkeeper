@@ -52,19 +52,19 @@ class EditCtgWindow(QWidget):
     def get_selected_ctg(self) -> QTreeWidgetItem:
         return self.ctgs_widget.currentItem()
 
-    def register_ctg_adder(self, handler) -> None:
+    def register_ctg_adder(self, handler: Callable[[Category], None]) -> None:
         self.ctg_adder = handler
 
-    def register_ctg_modifier(self, handler) -> None:
+    def register_ctg_modifier(self, handler: Callable[[Category], None]) -> None:
         self.ctg_modifier = handler
 
-    def register_ctg_checker(self, handler) -> None:
+    def register_ctg_checker(self, handler: Callable[[str], bool]) -> None:
         self.ctg_checker = handler
 
-    def register_ctg_deleter(self, handler) -> None:
+    def register_ctg_deleter(self, handler: Callable[[Category], None]) -> None:
         self.ctg_deleter = handler
 
-    def register_ctg_finder(self, handler) -> None:
+    def register_ctg_finder(self, handler: Callable[[str], None | int]) -> None:
         self.ctg_finder = handler
 
     def set_ctg_list(self, ctgs: list[Category]) -> None:
@@ -88,10 +88,10 @@ class EditCtgWindow(QWidget):
                 table.setCurrentItem(ctg_item)
                 setOnce = True
 
-    def contextMenuEvent(self, event) -> None:
+    def contextMenuEvent(self, event: Any) -> None:
         self.menu.exec_(event.globalPos())
 
-    def delete_ctg(self, ctg_item: CategoryItem, *_) -> None:
+    def delete_ctg(self, ctg_item: CategoryItem, *_: int) -> None:
         root = self.ctgs_widget.invisibleRootItem()
         (ctg_item.parent() or root).removeChild(ctg_item)
 
