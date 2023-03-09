@@ -143,6 +143,15 @@ class EditCtgWindow(QWidget):
         """
         ctg_item.setText(column, ctg_item.ctg.name)
 
+    def set_err_ctg(self, ctg_item: CategoryItem, column: int) -> None:
+        """Sets error category.
+
+        Args:
+            ctg_item (CategoryItem): ctg to set error text.
+        """
+        ctg_item.setText(column, f'"{ctg_item.text(column)}"_err '
+                         '(Wont be uploaded)')
+
     def edit_ctg_event(self, ctg_item: CategoryItem, column: int) -> None:
         """Event for processing category changes.
 
@@ -154,17 +163,17 @@ class EditCtgWindow(QWidget):
 
         if ctg_item.ctg.pk == 0:
             action: Any = self.ctg_adder
-            revert: Any = self.delete_ctg
+            revert: Any = self.set_err_ctg
         else:
             action = self.ctg_modifier
             revert = self.rename_ctg
 
         if not self.ctg_checker(entered_text):
-            QMessageBox.critical(self, 'Ошибка',
-                                 f'Category {entered_text} already exists')
             self.ctgs_widget.itemChanged.disconnect()
             revert(ctg_item, column)
             self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
+            QMessageBox.critical(self, 'Ошибка',
+                                 f'Category {entered_text} already exists')
         else:
             ctg_item.update(entered_text)
             action(ctg_item.ctg)
@@ -181,6 +190,11 @@ class EditCtgWindow(QWidget):
             assert len(ctg_items) == 1
             parent_item = ctg_items.pop()
             parent_pk = parent_item.ctg.pk
+
+        if parent_pk == 0:
+            QMessageBox.critical(self, 'Ошибка',
+                                 'Создание подкатегории категории с ошибкой.')
+            return
 
         self.ctgs_widget.itemChanged.disconnect()
         new_ctg = CategoryItem(parent_item, Category(parent=parent_pk))

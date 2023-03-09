@@ -124,7 +124,7 @@ class TableCategoryItem(TableItem):
         if ctg is None:
             # New ctg will have pk=0 and always drop here.
             ctg_item = self.ctg_view.get_selected_ctg()
-            if ctg_item is None:
+            if ctg_item is None or ctg_item.ctg.pk == 0:
                 raise ValueError('Категория не установлена')
             ctg = ctg_item.ctg.name
             self.trow.exp.category = ctg_item.ctg.pk
