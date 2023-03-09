@@ -28,6 +28,9 @@ class AbstractView(Protocol):
     def register_bgt_getter(handler):
         pass
 
+    def register_ctg_retriever(handler):
+        pass
+
 
 class CategoryPresenter:
     def __init__(self,  view: AbstractView, repository_factory):
@@ -92,14 +95,21 @@ class ExpensePresenter:
     def __init__(self,  view: AbstractView, repository_factory):
         self.view = view
         self.repo = repository_factory.get(Expense)
+        self.ctg_repo = repository_factory.get(Category)
 
         self.exps = self.repo.get_all()
         self.view.register_exp_adder(self.add_exp)
-        
-        self.view.set_exp_list(self.exps)
         self.view.register_exp_deleter(self.delete_exp)
         self.view.register_exp_modifier(self.modify_exp)
-    
+        self.view.register_ctg_retriever(self.retrieve_ctg)
+        self.view.set_exp_list(self.exps)
+
+    def retrieve_ctg(self, pk: int) -> str:
+        ctg = self.ctg_repo.get(pk)
+        if ctg is None:
+            return None
+        return ctg.name
+
     def add_exp(self, exp: Expense):
         self.repo.add(exp)
         self.exps.append(exp)

@@ -51,7 +51,8 @@ class TableAmountItem(TableItem):
 
 
 class TableCategoryItem(TableItem):
-    def __init__(self, row: TableRow):
+    def __init__(self, row: TableRow, retriever):
+        self.retriever = retriever
         super().__init__(row)
 
     def validate(self) -> bool:
@@ -59,7 +60,10 @@ class TableCategoryItem(TableItem):
         return True
     
     def restore(self):
-        self.setText(str(self.row.exp.category))
+        ctg = self.retriever(self.row.exp.category)
+        if ctg is None:
+            print('none')
+        self.setText(ctg)
     
     def update(self):
         self.row.exp.category = int(self.text())
@@ -117,7 +121,7 @@ class Table(QTableWidget):
         row = TableRow(exp)
         self.setItem(rc, 0, TableDateItem(row))
         self.setItem(rc, 1, TableAmountItem(row))
-        self.setItem(rc, 2, TableCategoryItem(row))
+        self.setItem(rc, 2, TableCategoryItem(row, self.parent.ctg_retriever))
         self.setItem(rc, 3, TableItem(row))
         self.itemChanged.connect(self.update_exp_event)
         return self.item(rc, 1)
@@ -161,6 +165,8 @@ class ExpenceWidget(QWidget):
         #exp = Expense(amount=100.0, category=5, comment="ASD")
         #self.exp_adder(exp)
         #print(f'ADDED {exp}')
+    def register_ctg_retriever(self, handler):
+        self.ctg_retriever = handler
 
     def register_exp_adder(self, handler):
         self.exp_adder = handler
@@ -174,4 +180,3 @@ class ExpenceWidget(QWidget):
     def set_exp_list(self, data: list[Expense]):
         for x in data:
             self.table.add_expense(x)
-        
