@@ -52,7 +52,7 @@ class LimitDayItem(QTableWidgetItem):
         """Sets new budget.
         """
         self.bgt = bgt
-        self.setText(str(self.bgt.amount))
+        self.setText(str(round(self.bgt.amount, 2)))
 
     def get(self) -> Budget:
         """Returns budget.
@@ -81,7 +81,7 @@ class LimitWeekItem(QTableWidgetItem):
         """Sets new budget.
         """
         self.bgt = bgt
-        self.setText(str(self.bgt.amount * 7))
+        self.setText(str(round(self.bgt.amount * 7, 2)))
 
     def get(self) -> Budget:
         """Returns budget.
@@ -110,7 +110,7 @@ class LimitMonthItem(QTableWidgetItem):
         """Sets new budget.
         """
         self.bgt = bgt
-        self.setText(str(self.bgt.amount * 30))
+        self.setText(str(round(self.bgt.amount * 30, 2)))
 
     def get(self) -> Budget:
         """Returns budget.
@@ -204,7 +204,7 @@ class BudgetWidget(QWidget):
         self.expenses_table.itemChanged.disconnect()
         assert len(exps) == 3
         for i, exp in enumerate(exps):
-            self.expenses_table.item(i, 0).setText(str(exp))
+            self.expenses_table.item(i, 0).setText(str(round(exp, 2)))
         self.expenses_table.itemChanged.connect(self.edit_bgt_event)
 
     def update_budget(self, bgt: Budget) -> None:

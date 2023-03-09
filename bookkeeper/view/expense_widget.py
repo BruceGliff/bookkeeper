@@ -82,12 +82,12 @@ class TableAmountItem(TableItem):
     def restore(self) -> None:
         """Sets amount as text.
         """
-        self.setText(str(self.trow.exp.amount))
+        self.setText(str(round(self.trow.exp.amount, 2)))
 
     def update(self) -> None:
         """Sets amount from text.
         """
-        self.trow.exp.amount = float(self.text())
+        self.trow.exp.amount = round(float(self.text()), 2)
 
     def get_err_msg(self) -> str:
         """Returns error message.
@@ -224,6 +224,10 @@ class Table(QTableWidget):
             return
 
         exp_item.update()
+        if isinstance(exp_item, TableAmountItem):
+            self.itemChanged.disconnect()
+            exp_item.restore()
+            self.itemChanged.connect(self.update_exp_event)
 
         if exp_item.should_emit_on_upd():
             self.wparent.emit_exp_changed()
