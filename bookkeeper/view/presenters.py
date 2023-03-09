@@ -1,5 +1,5 @@
 
-from typing import Protocol
+from typing import Protocol, Callable
 from datetime import datetime, timedelta
 
 from bookkeeper.models.category import Category
@@ -7,40 +7,56 @@ from bookkeeper.models.budget import Budget
 from bookkeeper.models.expense import Expense
 
 
-class AbstractView(Protocol):
-    def set_ctg_list(notused: list[Category]) -> None:
+class AbstractBudgetView(Protocol):
+    def register_bgt_modifier(self, handler: Callable[[Budget], None]) -> None:
         pass
 
-    def register_ctg_modifier(handler):
+    def register_bgt_getter(self, handler: Callable[[], Budget]) -> None:
         pass
 
-    def register_ctg_adder(handler):
+    def register_exp_getter(self, handler: Callable[[], list[float]]) -> None:
         pass
 
-    def register_ctg_checker(handler):
+
+class AbstractExpenseView(Protocol):
+    def register_exp_adder(self, handler) -> None:
         pass
 
-    def register_ctg_finder(handler):
+    def register_exp_deleter(self, handler) -> None:
         pass
 
-    def register_ctg_deleter(handler):
+    def register_exp_modifier(self, handler) -> None:
         pass
 
-    def register_bgt_modifier(handler):
+    def register_ctg_retriever(self, handler) -> None:
         pass
 
-    def register_bgt_getter(handler):
+    def set_exp_list(self, handler) -> None:
         pass
 
-    def register_ctg_retriever(handler):
+
+class AbstractCategoryView(Protocol):
+    def set_ctg_list(self, notused: list[Category]) -> None:
         pass
 
-    def register_exp_getter(handler):
+    def register_ctg_modifier(self, handler) -> None:
+        pass
+
+    def register_ctg_adder(self, handler) -> None:
+        pass
+
+    def register_ctg_checker(self, handler) -> None:
+        pass
+
+    def register_ctg_finder(self, handler) -> None:
+        pass
+
+    def register_ctg_deleter(self, handler) -> None:
         pass
 
 
 class CategoryPresenter:
-    def __init__(self,  view: AbstractView, repository_factory):
+    def __init__(self,  view: AbstractCategoryView, repository_factory):
         self.view = view
         self.ctg_repo = repository_factory.get(Category)
 
@@ -85,7 +101,7 @@ class CategoryPresenter:
 
 
 class BudgetPresenter:
-    def __init__(self,  view: AbstractView, repository_factory):
+    def __init__(self,  view: AbstractBudgetView, repository_factory):
         self.view = view
         self.exp_presenter = self.view.exp_presenter
         self.repo = repository_factory.get(Budget)
@@ -119,7 +135,7 @@ class BudgetPresenter:
 
 
 class ExpensePresenter:
-    def __init__(self,  view: AbstractView, repository_factory):
+    def __init__(self,  view: AbstractExpenseView, repository_factory):
         self.view = view
         self.repo = repository_factory.get(Expense)
         self.ctg_repo = repository_factory.get(Category)

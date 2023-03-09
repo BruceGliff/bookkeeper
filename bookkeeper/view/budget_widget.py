@@ -3,11 +3,11 @@ Widget of budget table
 """
 
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import (QWidget, QTableWidget, QTableWidgetItem, QMessageBox)
+from PySide6.QtWidgets import (QWidget, QTableWidgetItem, QMessageBox)
 from .presenters import BudgetPresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.budget import Budget
-from typing import Any
+from typing import Any, Callable
 from abc import ABC, abstractmethod
 
 
@@ -136,13 +136,13 @@ class BudgetWidget(QWidget):
         self.update_expenses(expenses)
         self.update_budget(bgt)
 
-    def register_bgt_getter(self, handler) -> None:
+    def register_bgt_getter(self, handler: Callable[[], Budget]) -> None:
         self.bgt_getter = handler
 
-    def register_bgt_modifier(self, handler) -> None:
+    def register_bgt_modifier(self, handler: Callable[[Budget], None]) -> None:
         self.bgt_modifier = handler
 
-    def register_exp_getter(self, handler) -> None:
+    def register_exp_getter(self, handler: Callable[[], list[float]]) -> None:
         self.exp_getter = handler
 
     def edit_bgt_event(self, bgt_item: AbstractItem) -> None:
