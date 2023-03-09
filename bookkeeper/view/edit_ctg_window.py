@@ -4,7 +4,7 @@ Widget of editing categories.
 
 from typing import Any, Callable
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import (QWidget, QTreeWidgetItem, QMenu, QMessageBox)
+from PySide6.QtWidgets import QWidget, QTreeWidgetItem, QMenu, QMessageBox
 
 from bookkeeper.view.presenters import CategoryPresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
