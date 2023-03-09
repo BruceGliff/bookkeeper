@@ -78,7 +78,7 @@ class TableCategoryItem(TableItem):
             ctg = ctg_item.ctg.name
             self.row.exp.category = ctg_item.ctg.pk
         self.setText(ctg)
-    
+
     def update(self):
         pk = self.ctg_view.ctg_finder(self.text())
         assert pk is not None
@@ -165,6 +165,10 @@ class Table(QTableWidget):
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
 
+    def update_ctgs(self):
+        for row in range(self.rowCount()):
+            self.item(row, 2).restore()
+
 
 class ExpenceWidget(QWidget):
     def __init__(self, ctg_view: EditCtgWindow) -> None:
@@ -195,3 +199,6 @@ class ExpenceWidget(QWidget):
     def set_exp_list(self, data: list[Expense]):
         for x in data:
             self.table.add_expense(x)
+
+    def update_ctgs(self):
+        self.table.update_ctgs()

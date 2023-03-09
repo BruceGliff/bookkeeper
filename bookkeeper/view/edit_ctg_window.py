@@ -3,6 +3,7 @@ Widget of editing categories
 """
 
 from PySide6 import QtWidgets, QtCore
+#from QtCore import Signal
 from PySide6.QtWidgets import (QWidget, QTreeWidgetItem, QMenu, QMessageBox)
 
 from .presenters import CategoryPresenter
@@ -25,6 +26,8 @@ class CategoryItem(QTreeWidgetItem):
 
 
 class EditCtgWindow(QWidget):
+    ctg_changed = QtCore.Signal()
+
     def __init__(self, ctgs: list[str]):
         super().__init__()
 
@@ -84,8 +87,6 @@ class EditCtgWindow(QWidget):
             if not setOnce:
                 table.setCurrentItem(ctg_item)
                 setOnce = True
-        
-
 
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
@@ -115,6 +116,7 @@ class EditCtgWindow(QWidget):
         else:
             ctg_item.update(entered_text)
             action(ctg_item.ctg)
+            self.ctg_changed.emit()
 
     def add_ctg_event(self):
         ctg_items = self.ctgs_widget.selectedItems()
@@ -142,4 +144,4 @@ class EditCtgWindow(QWidget):
             return
         self.delete_ctg(ctg_item)
         self.ctg_deleter(ctg_item.ctg)
-
+        self.ctg_changed.emit()

@@ -19,6 +19,7 @@ class MainWindow(QtWidgets.QMainWindow):
         budget = BudgetWidget()
         edit_field = EditCtgWindow([])
         expence = ExpenceWidget(edit_field)
+        edit_field.ctg_changed.connect(expence.update_ctgs)
 
         edit_layout = QtWidgets.QHBoxLayout()
         edit_layout.addWidget(budget)
