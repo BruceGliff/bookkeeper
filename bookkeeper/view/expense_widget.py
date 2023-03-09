@@ -2,50 +2,80 @@
 Widget of expense table
 """
 
-from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import (QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem)
 from datetime import datetime
 from typing import Any, Callable
 
-from .presenters import ExpensePresenter
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem
+
+from bookkeeper.view.edit_ctg_window import EditCtgWindow
+from bookkeeper.view.presenters import ExpensePresenter
 from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.expense import Expense
-from bookkeeper.models.category import Category
-from .edit_ctg_window import EditCtgWindow
 
 
 class TableRow():
+    """Class represents common feature inside one row.
+    """
     def __init__(self, exp: Expense):
         self.exp = exp
 
 
 class TableItem(QTableWidgetItem):
+    """Class represents Item. Default - comment.
+    """
     def __init__(self, row: TableRow):
         super().__init__()
         self.trow = row
         self.restore()
 
     def validate(self) -> bool:
+        """Default Item is valid.
+
+        Returns:
+            bool: True
+        """
         return True
 
     def restore(self) -> None:
+        """Sets comment as text.
+        """
         self.setText(self.trow.exp.comment)
 
     def update(self) -> None:
+        """Sets text to comment.
+        """
         self.trow.exp.comment = self.text()
 
     def get_err_msg(self) -> str:
+        """Returns error message. Default - empty.
+
+        Returns:
+            str: Empty error string.
+        """
         return ''
 
     def should_emit_on_upd(self) -> bool:
+        """Indicates if changing of item should emit signal.
+
+        Returns:
+            bool: False.
+        """
         return False
 
 
 class TableAmountItem(TableItem):
+    """Class represents Amount Item.
+    """
     def __init__(self, row: TableRow):
         super().__init__(row)
 
     def validate(self) -> bool:
+        """Vaildates if input is corrent.
+
+        Returns:
+            bool: True if input is correct, otherwise - False.
+        """
         try:
             float(self.text())
         except ValueError:
@@ -53,29 +83,46 @@ class TableAmountItem(TableItem):
         return True
 
     def restore(self) -> None:
+        """Sets amount as text.
+        """
         self.setText(str(self.trow.exp.amount))
 
     def update(self) -> None:
+        """Sets amount from text.
+        """
         self.trow.exp.amount = float(self.text())
 
     def get_err_msg(self) -> str:
+        """Returns error message.
+        """
         return 'Нужно ввести действительное число.'
 
     def should_emit_on_upd(self) -> bool:
+        """When changing should emit signal.
+        """
         return True
 
 
 class TableCategoryItem(TableItem):
+    """Class represents Category Item.
+    """
     def __init__(self, row: TableRow, exp_view: Any):
         self.ctg_view = exp_view.ctg_view
         self.retriever = exp_view.ctg_retriever
         super().__init__(row)
 
     def validate(self) -> bool:
+        """Vaildates if input is corrent.
+
+        Returns:
+            bool: True if input is correct, otherwise - False.
+        """
         ctg_name = self.text()
         return not self.ctg_view.ctg_checker(ctg_name)
 
     def restore(self) -> None:
+        """Sets category as text.
+        """
         ctg = self.retriever(self.trow.exp.category)
         if ctg is None:
             # New ctg will have pk=0 and always drop here.
@@ -87,21 +134,32 @@ class TableCategoryItem(TableItem):
         self.setText(ctg)
 
     def update(self) -> None:
+        """Sets category from text.
+        """
         pk = self.ctg_view.ctg_finder(self.text())
         assert pk is not None
         self.trow.exp.category = pk
-    
+
     def get_err_msg(self) -> str:
+        """Returns error message.
+        """
         return 'Нужно ввести существующую категорию.'
 
 
 class TableDateItem(TableItem):
+    """Class represents Date Item.
+    """
     fmt = "%Y-%m-%d %H:%M:%S"
 
     def __init__(self, row: TableRow):
         super().__init__(row)
 
     def validate(self) -> bool:
+        """Vaildates if input is corrent.
+
+        Returns:
+            bool: True if input is correct, otherwise - False.
+        """
         date_str = self.text()
         try:
             datetime.fromisoformat(date_str)
@@ -110,20 +168,30 @@ class TableDateItem(TableItem):
         return True
 
     def restore(self) -> None:
+        """Sets date as text.
+        """
         date = self.trow.exp.expense_date
         self.setText(date.strftime(self.fmt))
 
     def get_err_msg(self) -> str:
+        """Returns error message.
+        """
         return f'Неверный формат даты.\nИспользуйте {self.fmt}'
 
     def update(self) -> None:
+        """Sets date from text.
+        """
         self.trow.exp.expense_date = datetime.fromisoformat(self.text())
 
     def should_emit_on_upd(self) -> bool:
+        """When changing should emit signal.
+        """
         return True
 
 
 class Table(QTableWidget):
+    """Class represents Table.
+    """
     def __init__(self, parent: Any):
         super().__init__()
         self.wparent = parent
@@ -149,6 +217,11 @@ class Table(QTableWidget):
         self.itemChanged.connect(self.update_exp_event)
 
     def update_exp_event(self, exp_item: TableItem) -> None:
+        """Logic when item is changed.
+
+        Args:
+            exp_item (TableItem): Item to update.
+        """
         if not exp_item.validate():
             self.itemChanged.disconnect()
             QMessageBox.critical(self, 'Ошибка', exp_item.get_err_msg())
@@ -164,18 +237,25 @@ class Table(QTableWidget):
         self.wparent.exp_modifier(exp_item.trow.exp)
 
     def add_expense(self, exp: Expense) -> None:
+        """Adds expense row.
+
+        Args:
+            exp (Expense): Expense to add.
+        """
         row = TableRow(exp)
         ctg_item = TableCategoryItem(row, self.wparent)
-        rc = self.rowCount()
-        self.setRowCount(rc+1)
+        rcount = self.rowCount()
+        self.setRowCount(rcount+1)
         self.itemChanged.disconnect()
-        self.setItem(rc, 0, TableDateItem(row))
-        self.setItem(rc, 1, TableAmountItem(row))
-        self.setItem(rc, 2, ctg_item)
-        self.setItem(rc, 3, TableItem(row))
+        self.setItem(rcount, 0, TableDateItem(row))
+        self.setItem(rcount, 1, TableAmountItem(row))
+        self.setItem(rcount, 2, ctg_item)
+        self.setItem(rcount, 3, TableItem(row))
         self.itemChanged.connect(self.update_exp_event)
 
     def delete_exp_event(self) -> None:
+        """Deletes expense row.
+        """
         row = self.currentRow()
         if row == -1:
             return
@@ -192,29 +272,38 @@ class Table(QTableWidget):
         self.wparent.emit_exp_changed()
 
     def add_exp_event(self) -> None:
+        """Logic on Add event.
+        """
         exp = Expense()
         try:
             self.add_expense(exp)
-        except ValueError as ve:
-            QMessageBox.critical(self, 'Ошибка', f'{ve}')
+        except ValueError as valerr:
+            QMessageBox.critical(self, 'Ошибка', f'{valerr}')
             return
         self.wparent.exp_adder(exp)
         self.wparent.emit_exp_changed()
 
     def contextMenuEvent(self, event: Any) -> None:
+        """Logic on Mouse event.
+        """
         self.menu.exec_(event.globalPos())
 
     def update_ctgs(self) -> None:
+        """Logic to update categories when they are chenged in CategoryWidget.
+        """
         try:
             for row in range(self.rowCount()):
                 titem = self.item(row, 2)
                 assert isinstance(titem, TableItem)
                 titem.restore()
-        except ValueError as ve:
-            QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\nБудут выставлены некоректные категории.')
+        except ValueError as vallerr:
+            QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{vallerr}.\n'
+                                'Будут выставлены некоректные категории.')
 
 
 class ExpenseWidget(QWidget):
+    """Class represents Expense widget.
+    """
     exp_changed = QtCore.Signal()
 
     def __init__(self, ctg_view: EditCtgWindow) -> None:
@@ -231,31 +320,48 @@ class ExpenseWidget(QWidget):
         self.presenter = ExpensePresenter(self, RepositoryFactory())
 
     def register_ctg_retriever(self, handler: Callable[[int], None | str]) -> None:
+        """Registers ctg_retriever.
+        """
         self.ctg_retriever = handler
 
     def register_exp_adder(self, handler: Callable[[Expense], None]) -> None:
+        """Registers exp_adder.
+        """
         self.exp_adder = handler
 
     def register_exp_deleter(self, handler: Callable[[Expense], None]) -> None:
+        """Registers exp_deleter.
+        """
         self.exp_deleter = handler
 
     def register_exp_modifier(self, handler: Callable[[Expense], None]) -> None:
+        """Registers exp_modifier.
+        """
         self.exp_modifier = handler
 
     def set_exp_list(self, data: list[Expense]) -> None:
+        """Sets expenses to table.
+
+        Args:
+            data (list[Expense]): Expenses to set.
+        """
         list_to_delete: list[Expense] = []
         for x in data:
             try:
                 self.table.add_expense(x)
-            except ValueError as ve:
-                QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{ve}.\n'
+            except ValueError as vallerr:
+                QMessageBox.critical(self, 'Ошибка', f'Критическая ошибка.\n{vallerr}.\n'
                     f'Запись {x.expense_date.strftime("%Y-%m-%d %H:%M:%S")} будет удалена.')
                 list_to_delete.append(x)
         for x in list_to_delete:
             self.exp_deleter(x)
 
     def update_ctgs(self) -> None:
+        """Updates categories.
+        """
         self.table.update_ctgs()
 
     def emit_exp_changed(self) -> None:
+        """Emit signal that expenses are changed.
+        """
         self.exp_changed.emit()
