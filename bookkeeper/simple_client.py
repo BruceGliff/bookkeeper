@@ -20,7 +20,7 @@ cats = '''
 одежда
 '''.splitlines()
 
-Category.create_from_tree(read_tree(cats), cat_repo)
+#Category.create_from_tree(read_tree(cats), cat_repo)
 
 while True:
     try:
@@ -45,5 +45,5 @@ while True:
         print(exp)
 
 # TODO as we create categories every launch, I delete them.
-cat_repo.delete_all()
-exp_repo.delete_all()
+#cat_repo.delete_all()
+#exp_repo.delete_all()
