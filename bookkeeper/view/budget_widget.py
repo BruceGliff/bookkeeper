@@ -121,6 +121,10 @@ class LimitMonthItem(QTableWidgetItem):
 class BudgetWidget(QWidget):
     """Class represents Budget Widget.
     """
+    bgt_getter: Callable[[], Budget]
+    bgt_modifier: Callable[[Budget], None]
+    exp_getter: Callable[[], list[float]]
+
     def __init__(self, exp_presenter: Any) -> None:
         super().__init__()
         self.exp_presenter = exp_presenter

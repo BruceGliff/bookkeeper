@@ -88,9 +88,6 @@ class SQLiteRepository(AbstractRepository[T]):
                 f'INSERT INTO {self.table_name} ({names}) VALUES ({qmarks})',
                 values
             )
-            if not cur.lastrowid:
-                # TODO cov
-                raise ValueError("No assignable pk")
             obj.pk = int(cur.lastrowid)
 
         con.close()

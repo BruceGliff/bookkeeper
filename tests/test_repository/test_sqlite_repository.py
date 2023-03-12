@@ -1,6 +1,7 @@
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
 
 import pytest
+from datetime import datetime
 
 
 @pytest.fixture
@@ -9,14 +10,13 @@ def custom_class():
         pk: int = 0
         name: str = "TEST"
         value: int = 42
+        date: datetime = datetime.now()
+        real: float = 5.0
 
         def __str__(self) -> str:
             return f'pk={self.pk} name={self.name} value={self.value}'
 
         def __eq__(self, other) -> bool:
-            if not isinstance(other, Custom):
-                return NotImplemented
-
             return self.pk == other.pk and self.name == other.name and self.value == other.value
 
     return Custom

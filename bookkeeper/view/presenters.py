@@ -109,7 +109,7 @@ class CategoryPresenter:
         """
         for x in self.ctgs:
             if x.name == name:
-                return x.pk
+                return int(x.pk)
         return None
 
     def add_ctg(self, ctg: Category) -> None:
@@ -167,7 +167,7 @@ class ExpensePresenter:
         ctg = self.ctg_repo.get(pk)
         if ctg is None:
             return None
-        return ctg.name
+        return str(ctg.name)
 
     def add_exp(self, exp: Expense) -> None:
         """Creates new expense record in db.
@@ -278,4 +278,6 @@ class BudgetPresenter:
             bgts.append(bgt)
 
         assert len(bgts) == 1
-        return bgts.pop()
+        last = bgts.pop()
+        assert isinstance(last, Budget)
+        return last
