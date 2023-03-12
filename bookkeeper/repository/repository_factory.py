@@ -2,29 +2,46 @@
 """
 
 from abc import ABC, abstractmethod
-from .abstract_repository import AbstractRepository
-from .sqlite_repository import SQLiteRepository
+from bookkeeper.repository.abstract_repository import AbstractRepository
+from bookkeeper.repository.sqlite_repository import SQLiteRepository
+from bookkeeper.models.budget import Budget
+from bookkeeper.models.category import Category
+from bookkeeper.models.expense import Expense
 
 
 class AbsRepoFactory(ABC):
     """Represents abstract repository factory.
     """
     @abstractmethod
-    def get(self, cls: type) -> AbstractRepository:
-        """Returns AbstractRepository
+    def get_ctg(self) -> AbstractRepository[Category]:
+        """Returns AbstractRepository for Category
+        """
+
+    @abstractmethod
+    def get_bgt(self) -> AbstractRepository[Budget]:
+        """Returns AbstractRepository for Category
+        """
+
+    @abstractmethod
+    def get_exp(self) -> AbstractRepository[Expense]:
+        """Returns AbstractRepository for Category
         """
 
 
 class RepositoryFactory(AbsRepoFactory):
-    """Represents sqlite repository factory.
+    """Represents SQLiteRepository repository factory.
     """
-    def get(self, cls: type) -> AbstractRepository:
-        """Returns repository.
-
-        Args:
-            cls (type): type to construct proper repository.
-
-        Returns:
-            AbstractRepository: repository.
+    def get_ctg(self) -> AbstractRepository[Category]:
+        """Returns SQLiteRepository for Category
         """
-        return SQLiteRepository[cls]("databases/ui_client.db", cls)
+        return SQLiteRepository[Category]("databases/ui_client.db", Category)
+
+    def get_bgt(self) -> AbstractRepository[Budget]:
+        """Returns SQLiteRepository for Category
+        """
+        return SQLiteRepository[Budget]("databases/ui_client.db", Budget)
+
+    def get_exp(self) -> AbstractRepository[Expense]:
+        """Returns SQLiteRepository for Category
+        """
+        return SQLiteRepository[Expense]("databases/ui_client.db", Expense)

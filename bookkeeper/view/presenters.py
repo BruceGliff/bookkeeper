@@ -67,7 +67,7 @@ class CategoryPresenter:
     """
     def __init__(self,  view: AbstractCategoryView, repository_factory: AbsRepoFactory):
         self.view = view
-        self.ctg_repo = repository_factory.get(Category)
+        self.ctg_repo = repository_factory.get_ctg()
 
         self.ctgs = self.ctg_repo.get_all()
         self.view.set_ctg_list(self.ctgs)
@@ -145,8 +145,8 @@ class ExpensePresenter:
     """
     def __init__(self,  view: AbstractExpenseView, repository_factory: AbsRepoFactory):
         self.view = view
-        self.repo = repository_factory.get(Expense)
-        self.ctg_repo = repository_factory.get(Category)
+        self.repo = repository_factory.get_exp()
+        self.ctg_repo = repository_factory.get_ctg()
 
         self.exps = self.repo.get_all()
         self.view.register_exp_adder(self.add_exp)
@@ -235,7 +235,7 @@ class BudgetPresenter:
     def __init__(self,  view: AbstractBudgetView, repository_factory: AbsRepoFactory):
         self.view = view
         self.exp_presenter = self.view.exp_presenter
-        self.repo = repository_factory.get(Budget)
+        self.repo = repository_factory.get_bgt()
         self.view.register_bgt_modifier(self.modify_bgt)
         self.view.register_bgt_getter(self.get_bgt)
         self.view.register_exp_getter(self.get_exp)
