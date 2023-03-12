@@ -41,6 +41,11 @@ class EditCtgWindow(QWidget):
     """Class represents Widget of category editing.
     """
     ctg_changed = QtCore.Signal()
+    ctg_adder: Callable[[Category], None]
+    ctg_modifier: Callable[[Category], None]
+    ctg_checker: Callable[[str], bool]
+    ctg_deleter: Callable[[Category], None]
+    ctg_finder: Callable[[str], None | int]
 
     def __init__(self) -> None:
         super().__init__()

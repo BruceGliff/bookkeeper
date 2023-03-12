@@ -4,6 +4,7 @@ Widget of expense table
 
 from datetime import datetime
 from typing import Any, Callable
+from dataclasses import dataclass
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QWidget, QTableWidget, QMenu, QMessageBox, QTableWidgetItem
@@ -14,7 +15,8 @@ from bookkeeper.repository.repository_factory import RepositoryFactory
 from bookkeeper.models.expense import Expense
 
 
-class TableRow():
+@dataclass
+class TableRow:
     """Class represents common feature inside one row.
     """
     def __init__(self, exp: Expense):
@@ -309,6 +311,10 @@ class ExpenseWidget(QWidget):
     """Class represents Expense widget.
     """
     exp_changed = QtCore.Signal()
+    ctg_retriever: Callable[[int], None | str]
+    exp_adder: Callable[[Expense], None]
+    exp_deleter: Callable[[Expense], None]
+    exp_modifier: Callable[[Expense], None]
 
     def __init__(self, ctg_view: EditCtgWindow) -> None:
         super().__init__()
