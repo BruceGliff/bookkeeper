@@ -16,7 +16,8 @@ class CategoryItem(QTreeWidgetItem):
     """
     def __init__(self, parent: Any, ctg: Category):
         super().__init__(parent, [ctg.name])
-        self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
+        self.setFlags(self.flags()
+                      | QtCore.Qt.ItemIsEditable)  # type: ignore[attr-defined]
         self.ctg = ctg
 
     def update(self, name: str) -> None:
@@ -57,10 +58,12 @@ class EditCtgWindow(QWidget):
         self.presenter = CategoryPresenter(self, RepositoryFactory())
 
         self.menu = QMenu(self)
-        self.menu.addAction('Добавить').triggered.connect(self.add_ctg_event)
-        self.menu.addAction('Удалить').triggered.connect(self.delete_ctg_event)
-
-        self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
+        add_a = self.menu.addAction('Добавить')
+        add_a.triggered.connect(self.add_ctg_event)  # type: ignore[attr-defined]
+        del_a = self.menu.addAction('Удалить')
+        del_a.triggered.connect(self.delete_ctg_event)  # type: ignore[attr-defined]
+        self.sign = self.ctgs_widget.itemChanged   # type: ignore[attr-defined]
+        self.sign.connect(self.edit_ctg_event)
 
     def get_selected_ctg(self) -> QTreeWidgetItem:
         """Returns selected QTreeWidgetItem.
@@ -169,9 +172,9 @@ class EditCtgWindow(QWidget):
             revert = self.rename_ctg
 
         if not self.ctg_checker(entered_text):
-            self.ctgs_widget.itemChanged.disconnect()
+            self.sign.disconnect()
             revert(ctg_item, column)
-            self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
+            self.sign.connect(self.edit_ctg_event)
             QMessageBox.critical(self, 'Ошибка',
                                  f'Category {entered_text} already exists')
         else:
@@ -196,9 +199,9 @@ class EditCtgWindow(QWidget):
                                  'Создание подкатегории категории с ошибкой.')
             return
 
-        self.ctgs_widget.itemChanged.disconnect()
+        self.sign.disconnect()
         new_ctg = CategoryItem(parent_item, Category(parent=parent_pk))
-        self.ctgs_widget.itemChanged.connect(self.edit_ctg_event)
+        self.sign.connect(self.edit_ctg_event)
         self.ctgs_widget.setCurrentItem(new_ctg)
         self.ctgs_widget.edit(self.ctgs_widget.currentIndex())
 
@@ -213,11 +216,12 @@ class EditCtgWindow(QWidget):
             self.delete_ctg(ctg_item)
             return
 
+        anws = QMessageBox.Yes | QMessageBox.No  # type: ignore[attr-defined]
         confirm = QMessageBox.warning(self, 'Внимание',
                                       f'Вы уверены, что хотите удалить текущую "'
                                       f'{ctg_item.ctg.name}" и все дочерние категории?',
-                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if confirm == QMessageBox.No:
+                                      anws, QMessageBox.Yes)  # type: ignore[attr-defined]
+        if confirm == QMessageBox.No:  # type: ignore[attr-defined]
             return
 
         self.delete_ctg(ctg_item)

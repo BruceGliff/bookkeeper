@@ -142,21 +142,24 @@ class BudgetWidget(QWidget):
                                                     "Неделя "
                                                     "Месяц ".split())
 
+        resize = QtWidgets.QHeaderView.ResizeToContents  # type: ignore[attr-defined]
+        stretch = QtWidgets.QHeaderView.Stretch  # type: ignore[attr-defined]
         header = self.expenses_table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, resize)
+        header.setSectionResizeMode(1, stretch)
 
         for i in range(3):
             lost_item = QtWidgets.QTableWidgetItem()
-            lost_item.setFlags(lost_item.flags() & ~QtCore.Qt.ItemIsEditable)
+            lost_item.setFlags(lost_item.flags() &
+                               ~QtCore.Qt.ItemIsEditable)  # type: ignore[attr-defined]
             self.expenses_table.setItem(i, 0, lost_item)
 
         bgt: Budget = Budget(1)
         self.expenses_table.setItem(0, 1, LimitDayItem(bgt))
         self.expenses_table.setItem(1, 1, LimitWeekItem(bgt))
         self.expenses_table.setItem(2, 1, LimitMonthItem(bgt))
-        self.expenses_table.itemChanged.connect(self.edit_bgt_event)
+        self.sign = self.expenses_table.itemChanged  # type: ignore[attr-defined]
+        self.sign.connect(self.edit_bgt_event)
 
         layout.addWidget(self.expenses_table)
         self.setLayout(layout)
@@ -205,11 +208,11 @@ class BudgetWidget(QWidget):
         Args:
             exps (list[float]): expenses to set.
         """
-        self.expenses_table.itemChanged.disconnect()
+        self.sign.disconnect()
         assert len(exps) == 3
         for i, exp in enumerate(exps):
             self.expenses_table.item(i, 0).setText(str(round(exp, 2)))
-        self.expenses_table.itemChanged.connect(self.edit_bgt_event)
+        self.sign.connect(self.edit_bgt_event)
 
     def update_budget(self, bgt: Budget) -> None:
         """Updates table records responsible for budget.
@@ -217,12 +220,12 @@ class BudgetWidget(QWidget):
         Args:
             bgt (Budget): budget to set.
         """
-        self.expenses_table.itemChanged.disconnect()
+        self.sign.disconnect()
         for i in range(3):
             bitem = self.expenses_table.item(i, 1)
             assert isinstance(bitem, (LimitDayItem, LimitMonthItem, LimitWeekItem))
             bitem.update(bgt)
-        self.expenses_table.itemChanged.connect(self.edit_bgt_event)
+        self.sign.connect(self.edit_bgt_event)
 
     def retrieve_exp(self) -> None:
         """Gets expenses from ExpensesWidget and updates expenses.

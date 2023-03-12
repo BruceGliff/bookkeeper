@@ -88,7 +88,8 @@ class SQLiteRepository(AbstractRepository[T]):
                 f'INSERT INTO {self.table_name} ({names}) VALUES ({qmarks})',
                 values
             )
-            obj.pk = int(cur.lastrowid)
+            assert isinstance(cur.lastrowid, int)
+            obj.pk = cur.lastrowid
 
         con.close()
         return obj.pk

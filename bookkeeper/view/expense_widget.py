@@ -196,19 +196,24 @@ class Table(QTableWidget):
                                        "Категория "
                                        "Комментарий".split())
 
+        resize = QtWidgets.QHeaderView.ResizeToContents  # type: ignore[attr-defined]
+        stretch = QtWidgets.QHeaderView.Stretch  # type: ignore[attr-defined]
         header = self.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, resize)
+        header.setSectionResizeMode(1, resize)
+        header.setSectionResizeMode(2, resize)
+        header.setSectionResizeMode(3, stretch)
 
         self.verticalHeader().hide()
 
         self.menu = QMenu(self)
-        self.menu.addAction('Добавить').triggered.connect(self.add_exp_event)
-        self.menu.addAction('Удалить').triggered.connect(self.delete_exp_event)
+        add_a = self.menu.addAction('Добавить')
+        add_a.triggered.connect(self.add_exp_event)  # type: ignore[attr-defined]
+        del_a = self.menu.addAction('Удалить')
+        del_a.triggered.connect(self.delete_exp_event)  # type: ignore[attr-defined]
 
-        self.itemChanged.connect(self.update_exp_event)
+        self.sign = self.itemChanged  # type: ignore[attr-defined]
+        self.sign.connect(self.update_exp_event)
 
     def update_exp_event(self, exp_item: TableItem) -> None:
         """Logic when item is changed.
@@ -217,17 +222,17 @@ class Table(QTableWidget):
             exp_item (TableItem): Item to update.
         """
         if not exp_item.validate():
-            self.itemChanged.disconnect()
+            self.sign.disconnect()
             QMessageBox.critical(self, 'Ошибка', exp_item.get_err_msg())
             exp_item.restore()
-            self.itemChanged.connect(self.update_exp_event)
+            self.sign.connect(self.update_exp_event)
             return
 
         exp_item.update()
         if isinstance(exp_item, TableAmountItem):
-            self.itemChanged.disconnect()
+            self.sign.disconnect()
             exp_item.restore()
-            self.itemChanged.connect(self.update_exp_event)
+            self.sign.connect(self.update_exp_event)
 
         if exp_item.should_emit_on_upd():
             self.wparent.emit_exp_changed()
@@ -244,12 +249,12 @@ class Table(QTableWidget):
         ctg_item = TableCategoryItem(row, self.wparent)
         rcount = self.rowCount()
         self.setRowCount(rcount+1)
-        self.itemChanged.disconnect()
+        self.sign.disconnect()
         self.setItem(rcount, 0, TableDateItem(row))
         self.setItem(rcount, 1, TableAmountItem(row))
         self.setItem(rcount, 2, ctg_item)
         self.setItem(rcount, 3, TableItem(row))
-        self.itemChanged.connect(self.update_exp_event)
+        self.sign.connect(self.update_exp_event)
 
     def delete_exp_event(self) -> None:
         """Deletes expense row.
@@ -257,10 +262,11 @@ class Table(QTableWidget):
         row = self.currentRow()
         if row == -1:
             return
+        anws = QMessageBox.Yes | QMessageBox.No  # type: ignore[attr-defined]
         confirm = QMessageBox.warning(self, 'Внимание',
                                       'Вы уверены, что хотите удалить текущую запись?"',
-                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-        if confirm == QMessageBox.No:
+                                      anws, QMessageBox.Yes)  # type: ignore[attr-defined]
+        if confirm == QMessageBox.No:  # type: ignore[attr-defined]
             return
         titem = self.item(row, 0)
         self.removeRow(row)
